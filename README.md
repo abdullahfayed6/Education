@@ -1,13 +1,16 @@
-# Education Platform - Multi-Agent Interview System & Opportunity Matcher
+# Education Platform - Multi-Agent AI System
 
-An intelligent education platform featuring:
-1. **Multi-Agent Interview System** - Adaptive interview system with real-time evaluation and comprehensive reporting
-2. **AI-Powered Internship Opportunity Matcher** - Smart job matching using AI scoring and real-time LinkedIn scraping
+An intelligent education platform featuring AI-powered tools for career development:
+
+1. **🎯 Multi-Agent Interview System** - Adaptive interview simulation with 7 specialized AI agents, real-time evaluation, and comprehensive reporting
+2. **🎓 Career Translator Agent** - Converts academic lectures into industry-relevant career value, tasks, and real-world context
+3. **🚀 Internship Opportunity Matcher** - Smart job matching using AI scoring and real-time LinkedIn scraping
+4. **🎮 Task Simulation Engine** - Generate realistic internship tasks from 13 Egyptian tech companies
 
 ![Python](https://img.shields.io/badge/Python-3.11+-blue.svg)
 ![FastAPI](https://img.shields.io/badge/FastAPI-0.100+-green.svg)
 ![LangGraph](https://img.shields.io/badge/LangGraph-Workflow-purple.svg)
-![OpenAI](https://img.shields.io/badge/OpenAI-GPT--4-orange.svg)
+![OpenAI](https://img.shields.io/badge/OpenAI-GPT--4o--mini-orange.svg)
 
 ---
 
@@ -77,6 +80,86 @@ GET /api/interview/{session_id}
 GET /api/interview/{session_id}/report
 ```
 
+#### Delete Session
+```http
+DELETE /api/interview/{session_id}
+```
+
+---
+
+## 🎓 Career Translator Agent
+
+An Industry Mentor AI that translates academic lectures into career-relevant content.
+
+### Features
+- **Real-World Relevance** - Where concepts are used, problems they solve, risks if not known
+- **Industry Use Cases** - Domain-specific scenarios showing practical application
+- **Company-Style Tasks** - Realistic assignments with constraints and deliverables
+- **Skills Mapping** - Technical, engineering thinking, problem-solving, and team skills
+- **Career Impact** - Relevant roles, interview relevance, junior vs senior differences
+- **Production Challenges** - 7 real engineering challenges with professional solutions
+- **Life Story Explanations** - Relatable analogies that make concepts intuitive
+- **Prerequisite Knowledge** - 5 essential topics required before the lecture
+- **Learning Success Advice** - 10 actionable tips to master the topic
+
+### API Endpoints
+
+#### Translate Lecture
+```http
+POST /api/career/translate
+Content-Type: application/json
+
+{
+  "lecture_topic": "Binary Search Trees",
+  "lecture_text": "Optional detailed lecture content...",
+  "target_track": "Backend Developer"
+}
+```
+
+#### Raw Translation (for agent-to-agent communication)
+```http
+POST /api/career/translate/raw
+Content-Type: application/json
+
+{
+  "lecture_topic": "Database Indexing",
+  "target_track": "Data Engineer"
+}
+```
+
+#### Batch Translation
+```http
+POST /api/career/batch
+Content-Type: application/json
+
+[
+  {"lecture_topic": "REST API Design"},
+  {"lecture_topic": "SQL Joins"},
+  {"lecture_topic": "Docker Containers"}
+]
+```
+
+### Sample Output Structure
+```json
+{
+  "lecture_topic": "Binary Search Trees",
+  "real_world_relevance": {
+    "where_used": ["Database indexing", "File systems", "Autocomplete systems"],
+    "problems_it_solves": ["Fast lookups in sorted data", "Range queries"],
+    "risk_if_not_known": "Inefficient searches in production, O(n) instead of O(log n)"
+  },
+  "industry_use_cases": [...],
+  "company_style_tasks": [...],
+  "skills_built": {...},
+  "career_impact": {...},
+  "advanced_challenge": {...},
+  "production_challenges": [...],
+  "life_story_explanation": {...},
+  "prerequisite_knowledge": {...},
+  "learning_success_advice": [...]
+}
+```
+
 ---
 
 ## 🚀 Internship Opportunity Matcher
@@ -94,8 +177,6 @@ GET /api/interview/{session_id}/report
 | Endpoint | Method | Description |
 |----------|--------|-------------|
 | `/match` | POST | Match student profile with internship opportunities |
-| `/match/{run_id}` | GET | Retrieve a previous match run by ID |
-| `/task-simulation` | POST | Generate realistic internship task scenarios |
 
 ---
 
@@ -115,7 +196,7 @@ Jobs are scored on a 100-point scale:
 
 ---
 
-## 🔄 Workflow Pipeline
+## 🔄 Opportunity Matcher Workflow Pipeline
 
 The LangGraph workflow processes requests through 7 nodes:
 
@@ -160,6 +241,22 @@ The LangGraph workflow processes requests through 7 nodes:
 
 Generate realistic internship task scenarios for interview preparation and skill assessment.
 
+### API Endpoints
+```http
+GET /companies
+```
+Returns list of all available Egyptian tech companies.
+
+```http
+POST /task-simulation
+Content-Type: application/json
+
+{
+  "company_name": "Instabug",
+  "task_title": "Build a crash reporting SDK"
+}
+```
+
 ### Supported Companies (13 Egyptian Tech Companies)
 
 | Company | Type | Focus Areas |
@@ -185,56 +282,53 @@ Generate realistic internship task scenarios for interview preparation and skill
 ```
 Education/
 ├── app/
-│   ├── __init__.py
 │   ├── main.py              # FastAPI application entry point
 │   ├── config.py            # Environment configuration
 │   │
 │   ├── api/                 # API Endpoints
-│   │   ├── __init__.py
 │   │   ├── match.py         # Internship matching endpoints
 │   │   ├── interview.py     # Interview system endpoints
-│   │   └── task_simulation.py
+│   │   ├── career.py        # Career translator endpoints
+│   │   └── task_simulation.py # Task simulation endpoints
 │   │
-│   ├── graph/               # LangGraph Workflow
-│   │   ├── __init__.py
-│   │   ├── state.py         # Workflow state definition
-│   │   ├── nodes.py         # 7 processing nodes
-│   │   ├── workflow.py      # Graph compilation
+│   ├── graph/               # LangGraph Workflows
+│   │   ├── state.py         # Opportunity matcher state
+│   │   ├── nodes.py         # 7 processing nodes for matcher
+│   │   ├── workflow.py      # Opportunity matcher graph
 │   │   ├── interview_state.py    # Interview state definitions
-│   │   └── interview_workflow.py # Interview workflow
+│   │   └── interview_workflow.py # Interview workflow graph
 │   │
 │   ├── models/              # Data Models
-│   │   ├── __init__.py
-│   │   ├── schemas.py       # Pydantic schemas
-│   │   └── interview_schemas.py # Interview models
+│   │   ├── schemas.py       # Opportunity matcher schemas
+│   │   ├── interview_schemas.py # Interview models
+│   │   └── career_schemas.py    # Career translator models
 │   │
 │   ├── services/            # External Services
-│   │   ├── __init__.py
 │   │   ├── linkedin_client.py   # LinkedIn via SerpAPI
 │   │   ├── openai_client.py     # AI reason generation
 │   │   ├── search_client.py     # Search abstraction
-│   │   ├── task_simulation.py
+│   │   ├── task_simulation.py   # Task generation service
 │   │   ├── orchestrator.py      # Interview orchestrator
 │   │   └── session_store.py     # Session management
 │   │
 │   └── agents/              # AI Agents
-│       ├── __init__.py
-│       ├── interviewer.py
-│       ├── answer_analyzer.py
-│       ├── communication_coach.py
-│       ├── difficulty_engine.py
-│       ├── memory_agent.py
-│       ├── report_generator.py
-│       ├── session_manager.py
-│       ├── prompts.py
-│       └── base_agent.py
+│       ├── base_agent.py        # Base agent class
+│       ├── interviewer.py       # Question generation
+│       ├── answer_analyzer.py   # Response evaluation
+│       ├── communication_coach.py # Communication analysis
+│       ├── difficulty_engine.py # Difficulty adjustment
+│       ├── memory_agent.py      # Performance tracking
+│       ├── report_generator.py  # Final report generation
+│       ├── session_manager.py   # State transitions
+│       ├── career_translator.py # Lecture translation
+│       ├── prompts.py           # Interview prompts
+│       └── career_prompts.py    # Career translator prompts
 │
 ├── scripts/
-│   ├── sample_run.py         # Sample matching workflow
-│   └── sample_interview.py   # Sample interview demo
+│   ├── sample_run.py            # Sample matching workflow
+│   ├── sample_interview.py      # Sample interview demo
+│   └── sample_career_translator.py # Career translator demo
 │
-├── .env                     # Environment variables (not in git)
-├── .env.example             # Environment template
 ├── requirements.txt         # Python dependencies
 └── README.md
 ```
@@ -251,7 +345,7 @@ Education/
 ### AI & Workflow
 - **LangGraph** - Graph-based workflow orchestration
 - **LangChain** - LLM application framework
-- **OpenAI GPT-4o-mini** - AI-powered reason generation and interview agents
+- **OpenAI GPT-4o-mini** - AI-powered agents for interviews, career translation, and reason generation
 
 ### Job Search
 - **SerpAPI** - Google Search API for LinkedIn job scraping
@@ -259,7 +353,7 @@ Education/
 
 ### Data & Storage
 - **Python Dataclasses** - Structured data models
-- **In-memory Store** - Fast result caching
+- **In-memory Store** - Fast session and result caching
 
 ---
 
@@ -277,19 +371,19 @@ pip install -r requirements.txt
 ```
 
 ### 2. Configure Environment
-```bash
-cp .env.example .env
-```
+Create a `.env` file with your API keys:
 
-Edit `.env` with your API keys:
 ```env
-# OpenAI API Key (required for interview system and AI matching)
+# OpenAI API Key (required for all AI features)
 OPENAI_API_KEY=your_openai_api_key_here
 
-# Search API Key (for opportunity matching)
-SEARCH_API_KEY=your_search_api_key_here
+# Search API Key (for opportunity matching with SerpAPI)
+SEARCH_API_KEY=your_serpapi_key_here
 
-# Search Provider (mock, google, bing)
+# RapidAPI Key (optional - for LinkedIn API)
+RAPIDAPI_KEY=your_rapidapi_key_here
+
+# Search Provider (mock, serpapi)
 SEARCH_PROVIDER=mock
 
 # Max results for opportunity search
@@ -305,8 +399,9 @@ uvicorn app.main:app --reload --host 0.0.0.0 --port 8000
 ```
 
 The API will be available at `http://localhost:8000`
-- Swagger UI: `http://localhost:8000/docs`
-- ReDoc: `http://localhost:8000/redoc`
+- **Swagger UI**: `http://localhost:8000/docs`
+- **ReDoc**: `http://localhost:8000/redoc`
+- **Health Check**: `http://localhost:8000/health`
 
 ---
 
@@ -316,69 +411,65 @@ The API will be available at `http://localhost:8000`
 
 **Start Interview:**
 ```bash
-POST /api/interview/start
-Content-Type: application/json
+curl -X POST http://localhost:8000/api/interview/start \
+  -H "Content-Type: application/json" \
+  -d '{
+    "user_id": "user123",
+    "config": {
+      "target_role": "Backend Engineer",
+      "experience_level": "Mid",
+      "tech_stack": ["Python", "FastAPI", "PostgreSQL"]
+    }
+  }'
+```
 
-{
-  "user_id": "user123",
-  "config": {
-    "target_role": "Backend Engineer",
-    "experience_level": "Mid",
-    "tech_stack": ["Python", "FastAPI", "PostgreSQL"]
-  }
-}
+### Career Translator
+
+**Translate Lecture:**
+```bash
+curl -X POST http://localhost:8000/api/career/translate \
+  -H "Content-Type: application/json" \
+  -d '{
+    "lecture_topic": "Binary Search Trees",
+    "target_track": "Backend Developer"
+  }'
 ```
 
 ### Internship Matcher
 
-**Match Endpoint:**
+**Match Profile:**
 ```bash
-POST /match
-Content-Type: application/json
-
-{
-  "academic_year": 3,
-  "preference": "egypt",
-  "track": "data science",
-  "skills": ["python", "sql", "pandas", "machine learning", "data analysis"],
-  "notes": "Looking for summer internship"
-}
+curl -X POST http://localhost:8000/match \
+  -H "Content-Type: application/json" \
+  -d '{
+    "academic_year": 3,
+    "preference": "egypt",
+    "track": "data science",
+    "skills": ["python", "sql", "pandas", "machine learning"],
+    "notes": "Looking for summer internship"
+  }'
 ```
 
-**Response:**
-```json
-{
-  "run_id": "uuid",
-  "created_at": "2026-01-28T00:00:00",
-  "normalized_profile": {
-    "year_level": "junior",
-    "track": "data science",
-    "location_preference": "egypt",
-    "skills": {
-      "hard": ["data analysis", "machine learning"],
-      "tools": ["pandas", "python", "sql"],
-      "soft": []
-    }
-  },
-  "ranked_top5": [
-    {
-      "title": "Data Science Intern",
-      "company": "talabat",
-      "location": "Egypt",
-      "url": "https://linkedin.com/jobs/view/...",
-      "score": 85,
-      "reasons": [
-        "Perfect match for your Data Science track",
-        "Your Python and SQL skills align with requirements"
-      ]
-    }
-  ]
-}
+### Task Simulation
+
+**Generate Task:**
+```bash
+curl -X POST http://localhost:8000/task-simulation \
+  -H "Content-Type: application/json" \
+  -d '{
+    "company_name": "Instabug",
+    "task_title": "Build crash analytics dashboard"
+  }'
 ```
 
 ---
 
 ## 🧪 Run Sample Scripts
+
+**Career Translator Demo:**
+```bash
+python scripts/sample_career_translator.py
+```
 
 **Interview Demo:**
 ```bash
@@ -392,7 +483,7 @@ python scripts/sample_run.py
 
 ---
 
-## 🔍 Search Strategy
+## 🔍 Search Strategy (Opportunity Matcher)
 
 - ✅ Only `/jobs/view/` URLs (individual job pages)
 - ✅ Posted in last month (`tbs: qdr:m`)
@@ -404,5 +495,15 @@ python scripts/sample_run.py
 ## 📋 Notes
 
 - Set `SEARCH_PROVIDER=serpapi` and `SEARCH_API_KEY` to use SerpAPI. Otherwise, the mock provider returns sample opportunities.
-- OpenAI scoring is optional. If `OPENAI_API_KEY` is unset, scoring falls back to the deterministic rubric.
-- Interview system requires `OPENAI_API_KEY` to function.
+- **OpenAI API Key** is required for:
+  - Interview System (all 7 agents)
+  - Career Translator Agent
+  - AI-generated match reasons in Opportunity Matcher
+- If `OPENAI_API_KEY` is unset, scoring falls back to deterministic rubric (no AI reasons).
+
+---
+
+## 📄 License
+
+This project is for educational purposes.
+
