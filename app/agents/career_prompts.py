@@ -27,6 +27,7 @@ Translate the lecture into:
 5) Career impact  
 6) Advanced industry challenge
 7) Production challenges (7 real engineering problems)
+8) Life story explanation (intuitive real-life story)
 
 Think like a senior engineer mentoring a junior in a real company.
 
@@ -147,7 +148,13 @@ Return ONLY valid JSON with no additional text, no markdown, no code blocks:
       "why_it_happens": "Operational complexity in production",
       "professional_solution": "Observability and operational best practices"
     }}
-  ]
+  ],
+
+  "life_story_explanation": {{
+    "story_title": "Short relatable title that captures the essence of the concept",
+    "story": "A simple real-life story (3-5 paragraphs) that explains the lecture concept using everyday situations. Use normal life scenarios like: friends making decisions, business owners solving problems, traffic patterns, shopping experiences, teamwork challenges, planning events, managing risks, etc. The story should feel natural and human, NOT like a textbook analogy. Avoid all technical jargon inside the story. The reader should understand the concept emotionally and intuitively through the story.",
+    "concept_mapping": "Clear explanation (2-3 sentences) that maps story elements back to the technical concept. Example: 'In the story, the friends waiting for everyone to arrive before ordering represents... which is exactly how [technical concept] works when...'"
+  }}
 }}
 
 ----------------------------------------------------
@@ -170,6 +177,21 @@ Each challenge must have:
 1) The actual problem engineers encounter
 2) WHY it happens in real systems (root cause)
 3) HOW professionals handle it (specific tools, patterns, best practices)
+
+----------------------------------------------------
+LIFE STORY EXPLANATION REQUIREMENTS
+----------------------------------------------------
+The life story MUST:
+• Use NORMAL LIFE situations (friends, business, traffic, shopping, teamwork, planning, risk, etc.)
+• Indirectly represent the technical concept WITHOUT using technical jargon
+• Feel natural and human - NOT like a textbook analogy
+• Help the learner understand the idea EMOTIONALLY and INTUITIVELY
+• Be 3-5 paragraphs of a relatable scenario
+
+The concept_mapping MUST:
+• Clearly connect story elements → Technical concept
+• Help the learner bridge intuition with engineering thinking
+• Be concise but complete (2-3 sentences)
 
 ----------------------------------------------------
 BEHAVIOR RULES

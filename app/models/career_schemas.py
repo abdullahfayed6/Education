@@ -64,6 +64,13 @@ class ProductionChallenge(BaseModel):
     professional_solution: str = Field(description="How experienced engineers solve or prevent it in production")
 
 
+class LifeStoryExplanation(BaseModel):
+    """Real-life story that explains the concept intuitively."""
+    story_title: str = Field(description="Short relatable title for the story")
+    story: str = Field(description="A simple real-life story using everyday situations")
+    concept_mapping: str = Field(description="Explanation of how story elements map to the technical concept")
+
+
 # Main Output Model
 class CareerTranslation(BaseModel):
     """Complete career translation output - strict JSON for FastAPI response."""
@@ -76,6 +83,9 @@ class CareerTranslation(BaseModel):
     advanced_challenge: AdvancedChallenge
     production_challenges: List[ProductionChallenge] = Field(
         description="7 most common real engineering challenges related to this topic"
+    )
+    life_story_explanation: LifeStoryExplanation = Field(
+        description="Real-life story that explains the concept intuitively"
     )
 
 
