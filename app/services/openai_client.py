@@ -22,6 +22,7 @@ class OpenAIClient:
     
     def __init__(self, api_key: str | None = None) -> None:
         self.api_key = api_key or settings.openai_api_key
+        self.client = None
         if self.api_key:
             self.client = openai.OpenAI(api_key=self.api_key)
         self.model = "gpt-4o-mini"  # Fast and cost-effective

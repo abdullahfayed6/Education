@@ -39,7 +39,7 @@ class SearchResult:
 
 
 class SearchClient(Protocol):
-    def search(self, query: str, limit: int, location_preference: str = "egypt") -> list[OpportunityRaw]:
+    def search(self, query: str, limit: int, location_preference: str) -> list[OpportunityRaw]:
         ...
 
 
