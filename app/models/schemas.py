@@ -79,6 +79,8 @@ class OpportunityScore(BaseModel):
     work_type: str | None = None
     score: int
     reasons: list[str]
+    missing_skills: list[str]
+    recommended_actions: list[str]
 
 
 class MatchResultRun(BaseModel):
@@ -88,3 +90,4 @@ class MatchResultRun(BaseModel):
     generated_queries: list[QuerySpec]
     opportunities_top20: list[OpportunityClean]
     ranked_top5: list[OpportunityScore]
+    coach_plan: dict[str, list[str]]

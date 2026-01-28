@@ -6,6 +6,7 @@ ONLY returns intern/internship positions.
 from __future__ import annotations
 
 import logging
+import random
 import re
 import time
 
@@ -290,8 +291,6 @@ class LinkedInMockClient:
     """Mock client for testing without API."""
     
     def search(self, query: str, limit: int, location_preference: str = "egypt") -> list[OpportunityRaw]:
-        import random
-        
         intern_titles = [
             "Software Engineering Intern", "Data Science Intern", "Machine Learning Intern",
             "Backend Developer Intern", "Frontend Developer Intern", "DevOps Intern",

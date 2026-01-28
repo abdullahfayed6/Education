@@ -13,6 +13,7 @@ from app.graph.nodes import (
     clean_opportunities,
     score_opportunities,
     rank_opportunities,
+    build_coach_plan,
     build_result,
 )
 from app.models.schemas import MatchResultRun, UserInput
@@ -33,6 +34,7 @@ def create_match_graph() -> StateGraph:
     builder.add_node("clean_opportunities", clean_opportunities)
     builder.add_node("score_opportunities", score_opportunities)
     builder.add_node("rank_opportunities", rank_opportunities)
+    builder.add_node("build_coach_plan", build_coach_plan)
     builder.add_node("build_result", build_result)
     
     # Define edges (linear flow)
@@ -42,7 +44,8 @@ def create_match_graph() -> StateGraph:
     builder.add_edge("retrieve_opportunities", "clean_opportunities")
     builder.add_edge("clean_opportunities", "score_opportunities")
     builder.add_edge("score_opportunities", "rank_opportunities")
-    builder.add_edge("rank_opportunities", "build_result")
+    builder.add_edge("rank_opportunities", "build_coach_plan")
+    builder.add_edge("build_coach_plan", "build_result")
     builder.add_edge("build_result", END)
     
     return builder.compile()
@@ -66,4 +69,3 @@ class MatchWorkflow:
         final_state = self.graph.invoke(initial_state)
         
         return final_state["result"]
-

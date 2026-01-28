@@ -1,5 +1,5 @@
 """
-OpenAI Client for AI-powered job matching reasons.
+OpenAI Client for AI-powered job matching reasons and scoring.
 Generates personalized explanations for why a job matches a candidate.
 """
 from __future__ import annotations
@@ -9,18 +9,72 @@ import logging
 from typing import Any
 
 import openai
+import requests
 
 from app.config import settings
+from app.models.schemas import OpportunityClean, OpportunityScore, UserProfile
 
 logger = logging.getLogger("openai_client")
 
 
 class OpenAIClient:
-    """OpenAI client for generating AI-powered match reasons."""
+    """OpenAI client for AI-powered job matching and scoring."""
     
-    def __init__(self, api_key: str):
-        self.client = openai.OpenAI(api_key=api_key)
+    def __init__(self, api_key: str | None = None) -> None:
+        self.api_key = api_key or settings.openai_api_key
+        self.client = None
+        if self.api_key:
+            self.client = openai.OpenAI(api_key=self.api_key)
         self.model = "gpt-4o-mini"  # Fast and cost-effective
+    
+    def score_opportunity(
+        self, profile: UserProfile, opportunity: OpportunityClean, rubric: dict[str, int]
+    ) -> OpportunityScore | None:
+        """Score opportunity with AI-powered reasons and actions."""
+        if not self.api_key:
+            return None
+        system_prompt = (
+            "Return valid JSON only. Follow the schema exactly. Score from 0-100."
+        )
+        payload = {
+            "model": self.model,
+            "temperature": 0.2,
+            "messages": [
+                {"role": "system", "content": system_prompt},
+                {
+                    "role": "user",
+                    "content": json.dumps(
+                        {
+                            "profile": profile.model_dump(),
+                            "opportunity": opportunity.model_dump(),
+                            "rubric": rubric,
+                        }
+                    ),
+                },
+            ],
+        }
+        response = requests.post(
+            "https://api.openai.com/v1/chat/completions",
+            headers={"Authorization": f"Bearer {self.api_key}"},
+            json=payload,
+            timeout=30,
+        )
+        response.raise_for_status()
+        data = response.json()
+        content = data["choices"][0]["message"]["content"]
+        parsed = json.loads(content)
+        return OpportunityScore(
+            title=opportunity.title,
+            company=opportunity.company,
+            location=opportunity.location,
+            url=opportunity.url,
+            source=opportunity.source,
+            work_type=opportunity.work_type,
+            score=parsed["score"],
+            reasons=parsed["reasons"],
+            missing_skills=parsed["missing_skills"],
+            recommended_actions=parsed["recommended_actions"],
+        )
     
     def generate_match_reasons(
         self,
@@ -39,6 +93,9 @@ class OpenAIClient:
         
         Returns a list of 3-5 concise, specific reasons.
         """
+        if not self.api_key:
+            return self._fallback_reasons(score, job_title, company)
+            
         prompt = f"""You are a career advisor analyzing a job match for a student.
 
 **Student Profile:**

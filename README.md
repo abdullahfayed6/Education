@@ -1,6 +1,8 @@
-# 🎓 Education - AI-Powered Internship Opportunity Matcher
+# Education Platform - Multi-Agent Interview System & Opportunity Matcher
 
-An intelligent job matching system that helps students find the perfect internship opportunities using AI-powered scoring and real-time LinkedIn job scraping.
+An intelligent education platform featuring:
+1. **Multi-Agent Interview System** - Adaptive interview system with real-time evaluation and comprehensive reporting
+2. **AI-Powered Internship Opportunity Matcher** - Smart job matching using AI scoring and real-time LinkedIn scraping
 
 ![Python](https://img.shields.io/badge/Python-3.11+-blue.svg)
 ![FastAPI](https://img.shields.io/badge/FastAPI-0.100+-green.svg)
@@ -9,89 +11,107 @@ An intelligent job matching system that helps students find the perfect internsh
 
 ---
 
-## 🚀 Features
+## 🎯 Multi-Agent Interview System
 
-### Core Functionality
-- **Smart Job Matching**: AI-powered scoring algorithm that matches students with internships based on track, skills, academic level, and location preference
+### Features
+- **7 Specialized AI Agents** working together for comprehensive interviews
+- **Adaptive Difficulty** - Questions adjust based on candidate performance
+- **Real-time Evaluation** - 5-dimension scoring with immediate feedback
+- **State Machine Flow** - 7-state interview progression (INTRO → WARMUP → CORE_QUESTIONS → PRESSURE_ROUND → COMMUNICATION_TEST → CLOSING → FEEDBACK)
+- **Memory System** - Tracks weak/strong areas, prevents question repetition
+- **Comprehensive Reports** - Hiring recommendations with detailed analysis
+
+### The 7 Agents
+
+| Agent | Purpose |
+|-------|---------|
+| **Interviewer** | Generates contextual questions based on role, experience, and performance |
+| **Answer Analyzer** | Evaluates responses on 5 dimensions (technical, reasoning, communication, structure, confidence) |
+| **Communication Coach** | Detects communication issues (rambling, lack of structure, complexity) |
+| **Difficulty Engine** | Adjusts question complexity based on performance patterns |
+| **Memory Agent** | Tracks performance history, weak/strong areas, prevents question repetition |
+| **Report Generator** | Creates comprehensive final assessment with hiring recommendations |
+| **Session Manager** | Orchestrates interview flow and state transitions |
+
+### API Endpoints
+
+#### Start Interview
+```http
+POST /api/interview/start
+Content-Type: application/json
+
+{
+  "user_id": "user123",
+  "config": {
+    "target_role": "Backend Engineer",
+    "experience_level": "Mid",
+    "company_type": "Startup",
+    "interview_type": "Mixed",
+    "difficulty": 3,
+    "tech_stack": ["Python", "FastAPI", "PostgreSQL"],
+    "focus_area": "System Design",
+    "communication_strictness": 3
+  }
+}
+```
+
+#### Submit Answer
+```http
+POST /api/interview/answer
+Content-Type: application/json
+
+{
+  "session_id": "uuid-here",
+  "question": "Design a cache system",
+  "answer": "I would use Redis with a write-through strategy..."
+}
+```
+
+#### Get Session Status
+```http
+GET /api/interview/{session_id}
+```
+
+#### Get Final Report
+```http
+GET /api/interview/{session_id}/report
+```
+
+---
+
+## 🚀 Internship Opportunity Matcher
+
+### Features
+
+#### Core Functionality
+- **Smart Job Matching**: AI-powered scoring algorithm matching students with internships based on track, skills, academic level, and location preference
 - **Real LinkedIn Scraping**: Uses SerpAPI to search LinkedIn jobs with `site:linkedin.com/jobs` operator
 - **Multi-Query Search**: Makes 10 different searches with 8 results each for maximum coverage
 - **AI-Generated Reasons**: OpenAI generates personalized explanations for why each job matches
 - **Intern-Only Filter**: Automatically filters for intern/internship/trainee positions, excludes senior roles
 
-### API Endpoints
+#### API Endpoints
 | Endpoint | Method | Description |
 |----------|--------|-------------|
 | `/match` | POST | Match student profile with internship opportunities |
 | `/match/{run_id}` | GET | Retrieve a previous match run by ID |
 | `/task-simulation` | POST | Generate realistic internship task scenarios |
-| `/health` | GET | Health check endpoint |
 
 ---
 
-## 🛠️ Tech Stack
+## 📊 Scoring Algorithm
 
-### Backend Framework
-- **FastAPI** - Modern, fast web framework for building APIs
-- **Uvicorn** - Lightning-fast ASGI server
-- **Pydantic** - Data validation using Python type annotations
+Jobs are scored on a 100-point scale:
 
-### AI & Workflow
-- **LangGraph** - Graph-based workflow orchestration
-- **LangChain** - LLM application framework
-- **OpenAI GPT-4o-mini** - AI-powered reason generation
-
-### Job Search
-- **SerpAPI** - Google Search API for LinkedIn job scraping
-- **Requests** - HTTP library for API calls
-
-### Data & Storage
-- **Python Dataclasses** - Structured data models
-- **In-memory Store** - Fast result caching
-
----
-
-## 📁 Project Structure
-
-```
-Education/
-├── app/
-│   ├── __init__.py
-│   ├── main.py              # FastAPI application entry point
-│   ├── config.py            # Environment configuration
-│   │
-│   ├── api/                 # API Endpoints
-│   │   ├── __init__.py
-│   │   ├── match.py         # /match endpoint
-│   │   └── task_simulation.py
-│   │
-│   ├── graph/               # LangGraph Workflow
-│   │   ├── __init__.py
-│   │   ├── state.py         # Workflow state definition
-│   │   ├── nodes.py         # 7 processing nodes
-│   │   └── workflow.py      # Graph compilation
-│   │
-│   ├── models/              # Data Models
-│   │   ├── __init__.py
-│   │   └── schemas.py       # Pydantic schemas
-│   │
-│   ├── services/            # External Services
-│   │   ├── __init__.py
-│   │   ├── linkedin_client.py   # LinkedIn via SerpAPI
-│   │   ├── openai_client.py     # AI reason generation
-│   │   ├── search_client.py     # Search abstraction
-│   │   └── task_simulation.py
-│   │
-│   └── agents/              # AI Agents
-│       └── __init__.py
-│
-├── scripts/
-│   └── sample_run.py        # Sample workflow execution
-│
-├── .env                     # Environment variables (not in git)
-├── .env.example             # Environment template
-├── requirements.txt         # Python dependencies
-└── README.md
-```
+| Criteria | Points | Description |
+|----------|--------|-------------|
+| Track Alignment | 25 | Match with user's track/major |
+| Skills Match | 30 | Overlap with user's skills |
+| Academic Fit | 10 | Year level appropriateness |
+| Location Preference | 15 | Egypt/Remote/Abroad match |
+| Readiness Level | 10 | Intern vs Senior position |
+| Platform Quality | 5 | Source reliability (LinkedIn = 5) |
+| Company Reputation | 5 | Known tech companies bonus |
 
 ---
 
@@ -134,79 +154,184 @@ The LangGraph workflow processes requests through 7 nodes:
 └─────────────────┘
 ```
 
-### Node Types Legend
-| Type | Description |
-|------|-------------|
-| **Rule-based** | Deterministic logic using predefined rules, mappings, and algorithms |
-| **🤖 Agent** | AI-powered using OpenAI GPT-4o-mini for intelligent responses |
+---
 
-### Agent Details
-- **Score Node (Agent)**: Uses OpenAI to generate personalized, context-aware reasons explaining why each job matches the student's profile. Considers job description, company, skills alignment, and career goals.
+## 🎮 Task Simulation Feature
+
+Generate realistic internship task scenarios for interview preparation and skill assessment.
+
+### Supported Companies (13 Egyptian Tech Companies)
+
+| Company | Type | Focus Areas |
+|---------|------|-------------|
+| **Vodafone Egypt** | Telecommunications | Mobile services, IoT, digital payments |
+| **Orange Egypt** | Telecommunications | Telecom infrastructure, cloud solutions |
+| **Valeo Egypt** | Automotive Tech | Driver assistance systems, sensors |
+| **IBM Egypt** | Enterprise Tech | Cloud computing, AI, enterprise software |
+| **Microsoft Egypt** | Software & Cloud | Azure, Office 365, enterprise solutions |
+| **Swvl** | Transportation Startup | Mass transit, route optimization |
+| **Instabug** | Developer Tools SaaS | Mobile monitoring, bug reporting |
+| **Fawry** | Fintech | Digital payments, e-commerce |
+| **Paymob** | Payment Processing | Online payment gateway, merchant APIs |
+| **Noon Academy** | EdTech | Online education, live classes |
+| **Vezeeta** | HealthTech | Healthcare booking, telemedicine |
+| **Elmenus** | FoodTech | Restaurant discovery, food delivery |
+| **Dell Egypt** | Enterprise Hardware | IT infrastructure, support services |
 
 ---
 
-## 📊 Scoring Algorithm
+## 📁 Project Structure
 
-Jobs are scored on a 100-point scale:
+```
+Education/
+├── app/
+│   ├── __init__.py
+│   ├── main.py              # FastAPI application entry point
+│   ├── config.py            # Environment configuration
+│   │
+│   ├── api/                 # API Endpoints
+│   │   ├── __init__.py
+│   │   ├── match.py         # Internship matching endpoints
+│   │   ├── interview.py     # Interview system endpoints
+│   │   └── task_simulation.py
+│   │
+│   ├── graph/               # LangGraph Workflow
+│   │   ├── __init__.py
+│   │   ├── state.py         # Workflow state definition
+│   │   ├── nodes.py         # 7 processing nodes
+│   │   ├── workflow.py      # Graph compilation
+│   │   ├── interview_state.py    # Interview state definitions
+│   │   └── interview_workflow.py # Interview workflow
+│   │
+│   ├── models/              # Data Models
+│   │   ├── __init__.py
+│   │   ├── schemas.py       # Pydantic schemas
+│   │   └── interview_schemas.py # Interview models
+│   │
+│   ├── services/            # External Services
+│   │   ├── __init__.py
+│   │   ├── linkedin_client.py   # LinkedIn via SerpAPI
+│   │   ├── openai_client.py     # AI reason generation
+│   │   ├── search_client.py     # Search abstraction
+│   │   ├── task_simulation.py
+│   │   ├── orchestrator.py      # Interview orchestrator
+│   │   └── session_store.py     # Session management
+│   │
+│   └── agents/              # AI Agents
+│       ├── __init__.py
+│       ├── interviewer.py
+│       ├── answer_analyzer.py
+│       ├── communication_coach.py
+│       ├── difficulty_engine.py
+│       ├── memory_agent.py
+│       ├── report_generator.py
+│       ├── session_manager.py
+│       ├── prompts.py
+│       └── base_agent.py
+│
+├── scripts/
+│   ├── sample_run.py         # Sample matching workflow
+│   └── sample_interview.py   # Sample interview demo
+│
+├── .env                     # Environment variables (not in git)
+├── .env.example             # Environment template
+├── requirements.txt         # Python dependencies
+└── README.md
+```
 
-| Criteria | Points | Description |
-|----------|--------|-------------|
-| Track Alignment | 25 | Match with user's track/major |
-| Skills Match | 30 | Overlap with user's skills |
-| Academic Fit | 10 | Year level appropriateness |
-| Location Preference | 15 | Egypt/Remote/Abroad match |
-| Readiness Level | 10 | Intern vs Senior position |
-| Platform Quality | 5 | Source reliability (LinkedIn = 5) |
-| Company Reputation | 5 | Known tech companies bonus |
+---
+
+## 🛠️ Tech Stack
+
+### Backend Framework
+- **FastAPI** - Modern, fast web framework for building APIs
+- **Uvicorn** - Lightning-fast ASGI server
+- **Pydantic** - Data validation using Python type annotations
+
+### AI & Workflow
+- **LangGraph** - Graph-based workflow orchestration
+- **LangChain** - LLM application framework
+- **OpenAI GPT-4o-mini** - AI-powered reason generation and interview agents
+
+### Job Search
+- **SerpAPI** - Google Search API for LinkedIn job scraping
+- **Requests** - HTTP library for API calls
+
+### Data & Storage
+- **Python Dataclasses** - Structured data models
+- **In-memory Store** - Fast result caching
 
 ---
 
 ## ⚙️ Setup & Installation
 
-### 1. Clone the Repository
+### 1. Create Virtual Environment
 ```bash
-git clone <repository-url>
-cd Education
-```
+python -m venv .venv
+# Windows
+.\.venv\Scripts\Activate.ps1
+# Linux/Mac
+source .venv/bin/activate
 
-### 2. Create Virtual Environment
-```bash
-python -m venv venv
-source venv/bin/activate  # Linux/Mac
-venv\Scripts\activate     # Windows
-```
-
-### 3. Install Dependencies
-```bash
 pip install -r requirements.txt
 ```
 
-### 4. Configure Environment
+### 2. Configure Environment
 ```bash
 cp .env.example .env
 ```
 
 Edit `.env` with your API keys:
 ```env
-OPENAI_API_KEY=sk-your-openai-key
-SEARCH_API_KEY=your-serpapi-key
-SEARCH_PROVIDER=serpapi
-MAX_RESULTS=100
+# OpenAI API Key (required for interview system and AI matching)
+OPENAI_API_KEY=your_openai_api_key_here
+
+# Search API Key (for opportunity matching)
+SEARCH_API_KEY=your_search_api_key_here
+
+# Search Provider (mock, google, bing)
+SEARCH_PROVIDER=mock
+
+# Max results for opportunity search
+MAX_RESULTS=20
+
+# Top K results to return
 TOP_K=5
 ```
 
-### 5. Run the Server
+### 3. Run the Server
 ```bash
 uvicorn app.main:app --reload --host 0.0.0.0 --port 8000
 ```
 
+The API will be available at `http://localhost:8000`
+- Swagger UI: `http://localhost:8000/docs`
+- ReDoc: `http://localhost:8000/redoc`
+
 ---
 
-## 📝 API Usage
+## 📝 API Usage Examples
 
-### Match Endpoint
+### Interview System
 
-**Request:**
+**Start Interview:**
+```bash
+POST /api/interview/start
+Content-Type: application/json
+
+{
+  "user_id": "user123",
+  "config": {
+    "target_role": "Backend Engineer",
+    "experience_level": "Mid",
+    "tech_stack": ["Python", "FastAPI", "PostgreSQL"]
+  }
+}
+```
+
+### Internship Matcher
+
+**Match Endpoint:**
 ```bash
 POST /match
 Content-Type: application/json
@@ -235,7 +360,6 @@ Content-Type: application/json
       "soft": []
     }
   },
-  "opportunities_top20": [...],
   "ranked_top5": [
     {
       "title": "Data Science Intern",
@@ -245,12 +369,25 @@ Content-Type: application/json
       "score": 85,
       "reasons": [
         "Perfect match for your Data Science track",
-        "Your Python and SQL skills align with requirements",
-        "talabat is a leading tech company in Egypt"
+        "Your Python and SQL skills align with requirements"
       ]
     }
   ]
 }
+```
+
+---
+
+## 🧪 Run Sample Scripts
+
+**Interview Demo:**
+```bash
+python scripts/sample_interview.py
+```
+
+**Matching Demo:**
+```bash
+python scripts/sample_run.py
 ```
 
 ---
@@ -264,104 +401,8 @@ Content-Type: application/json
 
 ---
 
-## 🏢 Supported Tracks
+## 📋 Notes
 
-| Track | Search Keywords |
-|-------|----------------|
-| Data Science | Data Science Intern, Data Analyst Intern, Analytics Intern |
-| Machine Learning | ML Engineer Intern, AI Intern, Deep Learning Intern |
-| Software Engineering | Software Engineer Intern, SWE Intern, Developer Intern |
-| Backend | Backend Intern, API Developer Intern, Node.js Intern |
-| Frontend | Frontend Intern, React Intern, UI Developer Intern |
-| Full Stack | Full Stack Intern, Web Developer Intern |
-| DevOps | DevOps Intern, SRE Intern, Cloud Intern |
-| Mobile | iOS Intern, Android Intern, Flutter Intern |
-| Cybersecurity | Security Analyst Intern, InfoSec Intern |
-| Data Engineering | Data Engineer Intern, ETL Intern, Big Data Intern |
-
----
-
-## 🎮 Task Simulation Feature
-
-Generate realistic internship task scenarios for interview preparation and skill assessment.
-
-### What It Does
-- Creates **realistic workplace scenarios** based on actual Egyptian tech companies
-- Simulates real engineering tasks you might encounter as an intern
-- Includes company context, business problems, constraints, and deliverables
-- Helps students prepare for technical interviews and assess job readiness
-
-### Supported Companies (13 Egyptian Tech Companies)
-
-| Company | Type | Focus Areas |
-|---------|------|-------------|
-| **Vodafone Egypt** | Telecommunications | Mobile services, IoT, digital payments |
-| **Orange Egypt** | Telecommunications | Telecom infrastructure, cloud solutions |
-| **Valeo Egypt** | Automotive Tech | Driver assistance systems, sensors |
-| **IBM Egypt** | Enterprise Tech | Cloud computing, AI, enterprise software |
-| **Microsoft Egypt** | Software & Cloud | Azure, Office 365, enterprise solutions |
-| **Swvl** | Transportation Startup | Mass transit, route optimization |
-| **Instabug** | Developer Tools SaaS | Mobile monitoring, bug reporting |
-| **Fawry** | Fintech | Digital payments, e-commerce |
-| **Paymob** | Payment Processing | Online payment gateway, merchant APIs |
-| **Noon Academy** | EdTech | Online education, live classes |
-| **Vezeeta** | HealthTech | Healthcare booking, telemedicine |
-| **Elmenus** | FoodTech | Restaurant discovery, food delivery |
-| **Dell Egypt** | Enterprise Hardware | IT infrastructure, support services |
-
-### API Usage
-
-**List Available Companies:**
-```bash
-GET /companies
-```
-
-**Generate Task Simulation:**
-```bash
-POST /task-simulation
-Content-Type: application/json
-
-{
-  "company_name": "Instabug",
-  "task_title": "Build a Crash Analytics Dashboard"
-}
-```
-
-**Response Example:**
-```
-==========================================
-TASK SIMULATION: Build a Crash Analytics Dashboard @ Instabug
-==========================================
-
-COMPANY PROFILE
-- Name: Instabug
-- Type: Developer Tools SaaS
-- Size: Series B Startup
-- Focus Areas: Mobile app monitoring, bug reporting, crash analytics
-- Tech Stack: Swift, Kotlin, JavaScript, Node.js, MongoDB, AWS
-
-1. COMPANY CONTEXT
-   - Business problem: Real-time data processing challenges...
-   - Users: Mobile developers, QA teams, product managers...
-
-2. TASK ORIGIN
-   - Trigger: 30% increase in customer support tickets...
-   - Constraints: 2-week sprint, existing MongoDB schema...
-
-3. AMBIGUITY AREAS
-   - What data granularity is needed?
-   - Which crash types should be prioritized?
-
-4. DELIVERABLES
-   - Working dashboard prototype
-   - API documentation
-   - Performance benchmarks
-
-5. EVALUATION RUBRIC
-   - Code quality: 30%
-   - Problem-solving approach: 25%
-   - Communication: 20%
-   - Technical decisions: 25%
-```
-
----
+- Set `SEARCH_PROVIDER=serpapi` and `SEARCH_API_KEY` to use SerpAPI. Otherwise, the mock provider returns sample opportunities.
+- OpenAI scoring is optional. If `OPENAI_API_KEY` is unset, scoring falls back to the deterministic rubric.
+- Interview system requires `OPENAI_API_KEY` to function.

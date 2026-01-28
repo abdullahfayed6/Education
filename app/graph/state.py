@@ -26,6 +26,7 @@ class MatchState(TypedDict, total=False):
     clean_opportunities: list[OpportunityClean]
     scored_opportunities: list[OpportunityScore]
     ranked_opportunities: list[OpportunityScore]
+    coach_plan: dict[str, list[str]]
     
     # Output
     result: MatchResultRun
