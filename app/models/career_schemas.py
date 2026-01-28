@@ -84,6 +84,14 @@ class PrerequisiteKnowledge(BaseModel):
     required_topics: List[PrerequisiteTopic] = Field(description="5 essential prerequisite topics")
 
 
+class LearningAdvice(BaseModel):
+    """Actionable learning advice for mastering the topic."""
+    advice_title: str = Field(description="Short actionable advice title")
+    what_to_do: str = Field(description="Specific action the learner should take")
+    why_this_matters: str = Field(description="How this improves understanding or real-world ability")
+    common_mistake_to_avoid: str = Field(description="Typical learner error related to this advice")
+
+
 # Main Output Model
 class CareerTranslation(BaseModel):
     """Complete career translation output - strict JSON for FastAPI response."""
@@ -102,6 +110,9 @@ class CareerTranslation(BaseModel):
     )
     prerequisite_knowledge: PrerequisiteKnowledge = Field(
         description="5 essential topics required before studying this lecture"
+    )
+    learning_success_advice: List[LearningAdvice] = Field(
+        description="10 practical pieces of advice to help learner succeed"
     )
 
 

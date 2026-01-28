@@ -29,6 +29,7 @@ Translate the lecture into:
 7) Production challenges (7 real engineering problems)
 8) Life story explanation (intuitive real-life story)
 9) Prerequisite knowledge (5 essential foundations)
+10) Learning success advice (10 practical tips)
 
 Think like a senior engineer mentoring a junior in a real company.
 
@@ -186,7 +187,70 @@ Return ONLY valid JSON with no additional text, no markdown, no code blocks:
         "risk_if_missing": "What breaks without this understanding"
       }}
     ]
-  }}
+  }},
+
+  "learning_success_advice": [
+    {{
+      "advice_title": "First actionable learning advice",
+      "what_to_do": "Specific action the learner should take to master this topic",
+      "why_this_matters": "How this improves understanding or real-world ability",
+      "common_mistake_to_avoid": "Typical learner error related to this advice"
+    }},
+    {{
+      "advice_title": "Second learning strategy",
+      "what_to_do": "Concrete practice or thinking technique",
+      "why_this_matters": "Performance improvement explanation",
+      "common_mistake_to_avoid": "Common mistake learners make"
+    }},
+    {{
+      "advice_title": "Third practical tip",
+      "what_to_do": "Specific learning action",
+      "why_this_matters": "Why it accelerates mastery",
+      "common_mistake_to_avoid": "Error to avoid"
+    }},
+    {{
+      "advice_title": "Fourth engineering mindset tip",
+      "what_to_do": "How to think like an engineer about this topic",
+      "why_this_matters": "Real-world application benefit",
+      "common_mistake_to_avoid": "Student-thinking trap to avoid"
+    }},
+    {{
+      "advice_title": "Fifth retention strategy",
+      "what_to_do": "Technique to remember and internalize",
+      "why_this_matters": "Long-term knowledge retention",
+      "common_mistake_to_avoid": "Memorization mistake"
+    }},
+    {{
+      "advice_title": "Sixth hands-on practice tip",
+      "what_to_do": "Practical exercise or project approach",
+      "why_this_matters": "Skill building through doing",
+      "common_mistake_to_avoid": "Practice mistake to avoid"
+    }},
+    {{
+      "advice_title": "Seventh debugging/troubleshooting tip",
+      "what_to_do": "How to handle confusion or errors",
+      "why_this_matters": "Problem-solving skill development",
+      "common_mistake_to_avoid": "Debugging mistake"
+    }},
+    {{
+      "advice_title": "Eighth real-world connection tip",
+      "what_to_do": "How to connect learning to actual systems",
+      "why_this_matters": "Industry relevance and motivation",
+      "common_mistake_to_avoid": "Academic isolation trap"
+    }},
+    {{
+      "advice_title": "Ninth depth vs breadth tip",
+      "what_to_do": "How to balance understanding depth with coverage",
+      "why_this_matters": "Efficient learning path",
+      "common_mistake_to_avoid": "Learning scope mistake"
+    }},
+    {{
+      "advice_title": "Tenth mastery validation tip",
+      "what_to_do": "How to know when you truly understand",
+      "why_this_matters": "Self-assessment accuracy",
+      "common_mistake_to_avoid": "False confidence trap"
+    }}
+  ]
 }}
 
 ----------------------------------------------------
@@ -242,6 +306,27 @@ Each prerequisite must have:
 1) Topic name - clear and specific
 2) Why needed - direct connection to this lecture
 3) Risk if missing - specific confusion or mistakes that result
+
+----------------------------------------------------
+LEARNING SUCCESS ADVICE REQUIREMENTS
+----------------------------------------------------
+The 10 pieces of advice MUST be:
+• Actionable and specific (NOT motivational fluff)
+• Performance-improving learning strategies
+• Focused on learning technique, thinking style, and practice strategy
+
+Advice should help the learner:
+• Understand faster
+• Avoid common mistakes with this specific topic
+• Think like an engineer, not a student
+• Retain knowledge longer
+• Apply learning in real-world contexts
+
+RULES:
+• Each advice must be something the learner can DO
+• Include mistakes learners typically make with THIS topic
+• Reflect how professionals master skills, not how students memorize
+• Be specific to this lecture topic, not generic study tips
 
 ----------------------------------------------------
 BEHAVIOR RULES

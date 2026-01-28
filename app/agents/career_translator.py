@@ -14,6 +14,7 @@ from app.models.career_schemas import (
     CareerTranslation,
     CompanyStyleTask,
     IndustryUseCase,
+    LearningAdvice,
     LectureInput,
     LifeStoryExplanation,
     PrerequisiteKnowledge,
@@ -157,7 +158,69 @@ class CareerTranslatorAgent(BaseInterviewAgent):
                         "risk_if_missing": "Cannot troubleshoot when things don't work as expected"
                     }
                 ]
-            }
+            },
+            "learning_success_advice": [
+                {
+                    "advice_title": "Build before you read",
+                    "what_to_do": "Try implementing a basic version before reading all the theory",
+                    "why_this_matters": "Active struggle creates deeper understanding than passive reading",
+                    "common_mistake_to_avoid": "Reading everything first and never actually coding"
+                },
+                {
+                    "advice_title": "Break it, then fix it",
+                    "what_to_do": "Intentionally introduce bugs to see how the system fails",
+                    "why_this_matters": "Understanding failure modes builds debugging intuition",
+                    "common_mistake_to_avoid": "Only running happy-path examples"
+                },
+                {
+                    "advice_title": "Explain it simply",
+                    "what_to_do": "Try explaining the concept to someone non-technical",
+                    "why_this_matters": "If you can't explain it simply, you don't understand it deeply",
+                    "common_mistake_to_avoid": "Memorizing jargon without understanding meaning"
+                },
+                {
+                    "advice_title": "Connect to real systems",
+                    "what_to_do": "Research which companies use this and how",
+                    "why_this_matters": "Real-world context makes abstract concepts concrete",
+                    "common_mistake_to_avoid": "Studying in isolation from actual applications"
+                },
+                {
+                    "advice_title": "Practice under constraints",
+                    "what_to_do": "Solve problems with time limits and without looking up answers",
+                    "why_this_matters": "Interview and work conditions require recall, not lookup",
+                    "common_mistake_to_avoid": "Always coding with documentation open"
+                },
+                {
+                    "advice_title": "Draw it out",
+                    "what_to_do": "Create diagrams and visualizations of the concept",
+                    "why_this_matters": "Visual representation reveals structure and relationships",
+                    "common_mistake_to_avoid": "Keeping everything as text in your head"
+                },
+                {
+                    "advice_title": "Ask why, not just how",
+                    "what_to_do": "For each technique, understand why it's designed that way",
+                    "why_this_matters": "Understanding rationale helps you adapt to new situations",
+                    "common_mistake_to_avoid": "Memorizing patterns without understanding trade-offs"
+                },
+                {
+                    "advice_title": "Compare alternatives",
+                    "what_to_do": "Study what other approaches exist and their trade-offs",
+                    "why_this_matters": "Engineers make decisions by comparing options",
+                    "common_mistake_to_avoid": "Learning one solution as 'the' answer"
+                },
+                {
+                    "advice_title": "Teach to learn",
+                    "what_to_do": "Write a blog post or create a tutorial about the topic",
+                    "why_this_matters": "Teaching forces you to fill gaps in understanding",
+                    "common_mistake_to_avoid": "Passive consumption without production"
+                },
+                {
+                    "advice_title": "Test your understanding",
+                    "what_to_do": "Solve new problems without templates or examples",
+                    "why_this_matters": "True mastery means applying knowledge to novel situations",
+                    "common_mistake_to_avoid": "Feeling confident after following tutorials"
+                }
+            ]
         }
     
     async def translate(self, lecture_input: LectureInput) -> CareerTranslation:
@@ -397,6 +460,82 @@ class CareerTranslatorAgent(BaseInterviewAgent):
             required_topics=required_topics,
         )
         
+        # Build learning_success_advice
+        advice_data = parsed.get("learning_success_advice", [])
+        learning_success_advice = []
+        for advice in advice_data:
+            if isinstance(advice, dict):
+                learning_success_advice.append(LearningAdvice(
+                    advice_title=advice.get("advice_title", "Learning Tip"),
+                    what_to_do=advice.get("what_to_do", "Practice the concept"),
+                    why_this_matters=advice.get("why_this_matters", "Improves understanding"),
+                    common_mistake_to_avoid=advice.get("common_mistake_to_avoid", "Passive learning"),
+                ))
+        # Ensure we have at least some default advice
+        if not learning_success_advice:
+            learning_success_advice = [
+                LearningAdvice(
+                    advice_title="Build before you read",
+                    what_to_do="Try implementing before reading all theory",
+                    why_this_matters="Active struggle creates deeper understanding",
+                    common_mistake_to_avoid="Reading everything first without coding"
+                ),
+                LearningAdvice(
+                    advice_title="Break it, then fix it",
+                    what_to_do="Intentionally introduce bugs to see failures",
+                    why_this_matters="Understanding failure builds debugging intuition",
+                    common_mistake_to_avoid="Only running happy-path examples"
+                ),
+                LearningAdvice(
+                    advice_title="Explain it simply",
+                    what_to_do="Explain the concept to a non-technical person",
+                    why_this_matters="Simple explanation proves deep understanding",
+                    common_mistake_to_avoid="Memorizing jargon without meaning"
+                ),
+                LearningAdvice(
+                    advice_title="Connect to real systems",
+                    what_to_do="Research which companies use this and how",
+                    why_this_matters="Real-world context makes concepts concrete",
+                    common_mistake_to_avoid="Studying in isolation"
+                ),
+                LearningAdvice(
+                    advice_title="Practice under constraints",
+                    what_to_do="Solve problems with time limits",
+                    why_this_matters="Interviews require recall, not lookup",
+                    common_mistake_to_avoid="Always coding with docs open"
+                ),
+                LearningAdvice(
+                    advice_title="Draw it out",
+                    what_to_do="Create diagrams and visualizations",
+                    why_this_matters="Visual representation reveals structure",
+                    common_mistake_to_avoid="Keeping everything as text"
+                ),
+                LearningAdvice(
+                    advice_title="Ask why, not just how",
+                    what_to_do="Understand why techniques are designed that way",
+                    why_this_matters="Rationale helps adapt to new situations",
+                    common_mistake_to_avoid="Memorizing without understanding trade-offs"
+                ),
+                LearningAdvice(
+                    advice_title="Compare alternatives",
+                    what_to_do="Study other approaches and their trade-offs",
+                    why_this_matters="Engineers decide by comparing options",
+                    common_mistake_to_avoid="Learning one solution as 'the' answer"
+                ),
+                LearningAdvice(
+                    advice_title="Teach to learn",
+                    what_to_do="Write a blog post or tutorial about the topic",
+                    why_this_matters="Teaching forces you to fill gaps",
+                    common_mistake_to_avoid="Passive consumption without production"
+                ),
+                LearningAdvice(
+                    advice_title="Test your understanding",
+                    what_to_do="Solve new problems without templates",
+                    why_this_matters="True mastery means applying to novel situations",
+                    common_mistake_to_avoid="Feeling confident after tutorials"
+                ),
+            ]
+        
         return CareerTranslation(
             lecture_topic=parsed.get("lecture_topic", "Unknown Topic"),
             real_world_relevance=real_world_relevance,
@@ -408,6 +547,7 @@ class CareerTranslatorAgent(BaseInterviewAgent):
             production_challenges=production_challenges,
             life_story_explanation=life_story_explanation,
             prerequisite_knowledge=prerequisite_knowledge,
+            learning_success_advice=learning_success_advice,
         )
 
 
