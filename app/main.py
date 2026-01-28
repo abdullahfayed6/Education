@@ -7,12 +7,28 @@ from fastapi.middleware.cors import CORSMiddleware
 
 from app.api.match import router as match_router
 from app.api.interview import router as interview_router
+from app.api.career import router as career_router
 
 logging.basicConfig(level=logging.INFO)
 
 app = FastAPI(
-    title="Education Platform - Interview & Opportunity Matcher",
-    description="Multi-Agent Interview System with Adaptive Difficulty and Comprehensive Reporting",
+    title="Education Platform - Multi-Agent System",
+    description="""
+## Multi-Agent Education Platform
+
+This platform provides three main services:
+
+### 1. Interview System
+Adaptive technical and behavioral interviews with real-time evaluation, 
+difficulty adjustment, and comprehensive reporting using 7 specialized AI agents.
+
+### 2. Career Translator
+Converts academic lectures into industry value, job skills, and company-style tasks.
+Acts as an Industry Mentor translating learning into career acceleration.
+
+### 3. Opportunity Matcher
+Matches students with internship opportunities based on their profile and skills.
+    """,
     version="1.0.0",
 )
 
@@ -28,18 +44,29 @@ app.add_middleware(
 # Include routers
 app.include_router(match_router)
 app.include_router(interview_router)
+app.include_router(career_router)
 
 
 @app.get("/")
 async def root():
     """Root endpoint with API information."""
     return {
-        "message": "Education Platform API",
-        "endpoints": {
-            "interview": "/api/interview",
-            "match": "/api/match",
-            "docs": "/docs",
+        "message": "Education Platform - Multi-Agent System",
+        "services": {
+            "career_translator": {
+                "description": "Convert lectures to industry value",
+                "endpoint": "/api/career/translate"
+            },
+            "interview": {
+                "description": "Adaptive interview system",
+                "endpoint": "/api/interview"
+            },
+            "match": {
+                "description": "Opportunity matching",
+                "endpoint": "/api/match"
+            }
         },
+        "documentation": "/docs",
     }
 
 

@@ -32,6 +32,18 @@ from app.models.interview_schemas import (
     SubmitAnswerResponse,
     SessionStatusResponse,
 )
+from app.models.career_schemas import (
+    LectureInput,
+    RealWorldRelevance,
+    IndustryUseCase,
+    CompanyStyleTask,
+    SkillsBuilt,
+    CareerImpact,
+    AdvancedChallenge,
+    CareerTranslation,
+    TranslateLectureRequest,
+    TranslateLectureResponse,
+)
 
 __all__ = [
     # Match schemas
@@ -65,4 +77,15 @@ __all__ = [
     "SubmitAnswerRequest",
     "SubmitAnswerResponse",
     "SessionStatusResponse",
+    # Career schemas
+    "LectureInput",
+    "RealWorldRelevance",
+    "IndustryUseCase",
+    "CompanyStyleTask",
+    "SkillsBuilt",
+    "CareerImpact",
+    "AdvancedChallenge",
+    "CareerTranslation",
+    "TranslateLectureRequest",
+    "TranslateLectureResponse",
 ]
