@@ -65,7 +65,7 @@ async def root():
             },
             "match": {
                 "description": "Opportunity matching",
-                "endpoint": "/api/match"
+                "endpoint": "/match"
             },
             "task_simulation": {
                 "description": "Generate internship task scenarios",

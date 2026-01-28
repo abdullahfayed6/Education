@@ -17,32 +17,83 @@ from app.models.schemas import (
     SkillBuckets,
     UserProfile,
 )
-from app.services.search_client import get_search_client
+from app.services.search_client import get_search_client, EGYPTIAN_COMPANIES
+from app.services.linkedin_client import get_linkedin_client, TRACK_TITLES as LINKEDIN_TRACK_TITLES
+from app.services.openai_client import get_openai_client
 
 logger = logging.getLogger("matcher")
 
 # ============ Constants ============
 YEAR_MAP = {1: "freshman", 2: "sophomore", 3: "junior", 4: "senior", 5: "graduate"}
-SOFT_SKILLS = {"communication", "teamwork", "leadership", "collaboration", "problem solving"}
-TOOLS = {"python", "sql", "pandas", "tensorflow", "pytorch", "docker", "aws", "git", "excel"}
+SOFT_SKILLS = {"communication", "teamwork", "leadership", "collaboration", "problem solving", "presentation", "negotiation"}
+TOOLS = {"python", "sql", "pandas", "tensorflow", "pytorch", "docker", "aws", "git", "excel", "kubernetes", "azure", "gcp", 
+         "java", "javascript", "typescript", "react", "node.js", "django", "flask", "fastapi", "mongodb", "postgresql",
+         "mysql", "redis", "kafka", "spark", "hadoop", "tableau", "power bi", "figma", "jira", "confluence"}
 
+# Enhanced track titles mapping
 TRACK_TITLES = {
-    "computer science": ["Software Engineer Intern", "Data Science Intern", "ML Intern"],
-    "data science": ["Data Science Intern", "Machine Learning Intern", "Data Analyst Intern"],
-    "ai engineer": ["AI Intern", "Machine Learning Intern"],
-    "data engineer": ["Data Engineering Intern", "ETL Intern"],
-    "backend": ["Backend Intern", "Software Engineer Intern"],
-    "software engineering": ["Software Engineer Intern", "Full Stack Intern", "Backend Intern"],
-    "cybersecurity": ["Cybersecurity Intern", "Security Analyst Intern"],
-    "business": ["Business Analyst Intern", "Product Intern"],
+    "computer science": ["Software Engineer Intern", "Software Developer Intern", "SWE Intern", "Developer Intern"],
+    "data science": ["Data Science Intern", "Data Scientist Intern", "Data Analyst Intern", "Analytics Intern"],
+    "data scientist": ["Data Science Intern", "Data Scientist Intern", "ML Intern", "Analytics Intern"],
+    "ai engineer": ["AI Intern", "Machine Learning Intern", "ML Engineer Intern", "AI/ML Intern"],
+    "machine learning": ["Machine Learning Intern", "ML Engineer Intern", "AI Intern", "Deep Learning Intern"],
+    "data engineer": ["Data Engineering Intern", "Data Engineer Intern", "ETL Intern", "Big Data Intern"],
+    "data engineering": ["Data Engineering Intern", "Data Engineer Intern", "ETL Intern", "Big Data Intern"],
+    "backend": ["Backend Intern", "Backend Developer Intern", "Software Engineer Intern", "API Developer Intern"],
+    "backend developer": ["Backend Intern", "Backend Developer Intern", "Server-Side Developer Intern"],
+    "frontend": ["Frontend Intern", "Frontend Developer Intern", "UI Developer Intern", "React Intern"],
+    "frontend developer": ["Frontend Intern", "Frontend Developer Intern", "Web Developer Intern"],
+    "full stack": ["Full Stack Intern", "Full Stack Developer Intern", "Web Developer Intern"],
+    "software engineering": ["Software Engineer Intern", "Software Developer Intern", "SDE Intern", "Developer Intern"],
+    "cybersecurity": ["Cybersecurity Intern", "Security Analyst Intern", "InfoSec Intern", "Security Engineer Intern"],
+    "devops": ["DevOps Intern", "DevOps Engineer Intern", "SRE Intern", "Platform Engineer Intern"],
+    "cloud": ["Cloud Intern", "Cloud Engineer Intern", "AWS Intern", "Azure Intern"],
+    "mobile": ["Mobile Developer Intern", "iOS Intern", "Android Intern", "Mobile Engineer Intern"],
+    "product": ["Product Intern", "Product Manager Intern", "APM Intern", "Product Management Intern"],
+    "business": ["Business Analyst Intern", "Business Intelligence Intern", "BI Intern", "Strategy Intern"],
+    "qa": ["QA Intern", "Quality Assurance Intern", "Test Engineer Intern", "SDET Intern"],
+    "ui/ux": ["UI/UX Intern", "UX Designer Intern", "Product Designer Intern", "Design Intern"],
 }
 
+# Platform-specific search strategies
+PLATFORM_SEARCH_STRATEGIES = {
+    "linkedin": {
+        "egypt": ["software intern Egypt", "internship Cairo", "تدريب مصر"],
+        "remote": ["remote internship worldwide", "work from home intern"],
+        "abroad": ["internship visa sponsorship", "international intern program"],
+    },
+    "wuzzuf": {
+        "egypt": ["internship", "تدريب", "fresh graduate", "junior"],
+    },
+    "indeed": {
+        "egypt": ["internship Egypt", "intern Cairo", "graduate program Egypt"],
+        "remote": ["remote internship", "virtual internship"],
+        "abroad": ["internship USA", "internship Europe", "internship UAE"],
+    },
+}
+
+# Scoring weights (enhanced)
 RUBRIC = {
-    "track_alignment": 30,
-    "skills_match": 35,
-    "academic_fit": 15,
-    "preference_fit": 10,
+    "track_alignment": 25,
+    "skills_match": 30,
+    "academic_fit": 10,
+    "preference_fit": 15,
     "readiness": 10,
+    "platform_quality": 5,
+    "company_reputation": 5,
+}
+
+# Platform quality scores
+PLATFORM_SCORES = {
+    "LinkedIn": 5,
+    "Wuzzuf": 5,
+    "Indeed": 4,
+    "Glassdoor": 4,
+    "Forasna": 4,
+    "Bayt": 3,
+    "Tanqeeb": 3,
+    "Google Jobs": 2,
+    "mock": 1,
 }
 
 
@@ -82,156 +133,119 @@ def normalize_profile(state: MatchState, config: RunnableConfig) -> dict:
     return {"profile": profile}
 
 
+# ============ LinkedIn Boolean Query Builder ============
+
+# Location groups for boolean queries
+EGYPT_LOCATIONS = ["Egypt", "Cairo", "Giza", "Alexandria", "Smart Village", "New Cairo", "6th of October"]
+REMOTE_KEYWORDS = ["Remote", "Work from Home", "Worldwide", "Anywhere"]
+ABROAD_LOCATIONS = ["USA", "United States", "UK", "Germany", "UAE", "Dubai", "Canada", "Europe"]
+
+
+def _build_titles_clause(titles: list[str]) -> str:
+    """Build OR clause for job titles: ("Title1" OR "Title2")"""
+    return "(" + " OR ".join([f'"{t}"' for t in titles[:4]]) + ")"
+
+
+def _build_location_clause(location_preference: str) -> str:
+    """Build OR clause for locations based on preference."""
+    if location_preference == "egypt":
+        locs = EGYPT_LOCATIONS[:5]
+        return "(" + " OR ".join(locs) + ")"
+    elif location_preference == "remote":
+        return '(Remote OR "Work from Home" OR Worldwide)'
+    elif location_preference == "abroad":
+        locs = ABROAD_LOCATIONS[:5]
+        return "(" + " OR ".join(locs) + ")"
+    else:
+        return "(Egypt OR Cairo OR Remote)"
+
+
+def _build_skills_clause(skills: list[str]) -> str:
+    """Build OR clause for skills if enough skills provided."""
+    if skills and len(skills) >= 2:
+        top_skills = [s for s in skills[:4] if len(s) > 2]  # Filter short strings
+        if top_skills:
+            return " ".join(top_skills)  # Simple space-separated for Google Jobs
+    return ""
+
+
 def build_queries(state: MatchState, config: RunnableConfig) -> dict:
-    """Build search queries based on user profile with location-specific targeting."""
+    """
+    Build a simple search query for Google Jobs API.
+    
+    OPTIMIZED for API credits: Uses only 1 query = 1 API credit.
+    Google Jobs works better with simple keyword queries.
+    """
     profile = state["profile"]
     
-    titles = TRACK_TITLES.get(profile.track, ["Intern", "Internship"])
+    # Get job titles for the track
+    track_key = profile.track.lower().strip()
+    titles = LINKEDIN_TRACK_TITLES.get(track_key, LINKEDIN_TRACK_TITLES.get("software engineering", ["Software Intern"]))
+    
+    # Use first title (most relevant)
+    primary_title = titles[0] if titles else "Software Intern"
+    
+    # Get top skills
     skills = profile.skills.hard + profile.skills.tools
-    skill_clause = " ".join(sorted(set(skills))[:3]) if skills else ""
+    skills_str = " ".join(skills[:3]) if skills else ""
     
-    queries = []
-    
-    if profile.location_preference == "egypt":
-        # Egypt-specific queries - target Egyptian companies and locations
-        egypt_locations = ["Cairo", "Alexandria", "Giza", "Egypt"]
-        egypt_companies = ["Vodafone Egypt", "Orange Egypt", "Valeo", "Dell Egypt", "IBM Egypt", "Microsoft Egypt"]
-        
-        for title in titles[:2]:
-            # Query 1: Direct Egypt search
-            queries.append(QuerySpec(
-                query=f"{title} internship Egypt Cairo {skill_clause}",
-                provider="search",
-                rationale=f"Search for {title} in Egypt"
-            ))
-            
-            # Query 2: Arabic-friendly search
-            queries.append(QuerySpec(
-                query=f"تدريب {title} مصر {skill_clause}",
-                provider="search",
-                rationale=f"Arabic search for {title} internship"
-            ))
-        
-        # Query 3: Egyptian job boards style
-        queries.append(QuerySpec(
-            query=f"internship {profile.track} Cairo Egypt 2024 2025 {skill_clause}",
-            provider="search",
-            rationale="General Egypt internship search"
-        ))
-        
-        # Query 4: Major Egyptian tech companies
-        queries.append(QuerySpec(
-            query=f"software intern Egypt Vodafone Orange Valeo IBM {skill_clause}",
-            provider="search",
-            rationale="Major Egyptian tech companies"
-        ))
-        
-    elif profile.location_preference == "remote":
-        for title in titles[:2]:
-            queries.append(QuerySpec(
-                query=f"{title} internship remote worldwide {skill_clause}",
-                provider="search",
-                rationale=f"Remote {title} search"
-            ))
-        queries.append(QuerySpec(
-            query=f"remote internship {profile.track} work from home {skill_clause}",
-            provider="search",
-            rationale="Remote work internship"
-        ))
-        
-    elif profile.location_preference == "abroad":
-        # International opportunities (US, Europe, Gulf)
-        for title in titles[:2]:
-            queries.append(QuerySpec(
-                query=f"{title} internship international visa sponsorship {skill_clause}",
-                provider="search",
-                rationale=f"International {title} with visa"
-            ))
-        queries.append(QuerySpec(
-            query=f"internship {profile.track} USA Europe UAE {skill_clause}",
-            provider="search",
-            rationale="International markets search"
-        ))
-        
+    # Build simple query: "Data Science Intern python sql"
+    if skills_str:
+        query = f"{primary_title} {skills_str}"
     else:
-        # Default/hybrid
-        for title in titles[:2]:
-            queries.append(QuerySpec(
-                query=f"{title} internship {skill_clause}",
-                provider="search",
-                rationale=f"General {title} search"
-            ))
+        query = primary_title
     
-    logger.info("Queries built", extra={"count": len(queries)})
+    queries = [
+        QuerySpec(
+            query=query,
+            provider="linkedin",
+            rationale=f"LinkedIn search for {profile.track} internships via SerpAPI (1 API credit)"
+        )
+    ]
+    
+    logger.info("Query built (1 API credit)", extra={
+        "query": query,
+        "preference": profile.location_preference
+    })
     return {"queries": queries}
 
 
 def retrieve_opportunities(state: MatchState, config: RunnableConfig) -> dict:
-    """Retrieve exactly MAX_RESULTS opportunities from search provider."""
+    """
+    Retrieve opportunities from LinkedIn using ONE boolean query.
+    
+    OPTIMIZED: Uses only 1 API credit per search.
+    """
     queries = state["queries"]
     profile = state["profile"]
-    client = get_search_client()
+    client = get_linkedin_client()
     
     all_results = []
     seen_urls = set()
-    required_count = settings.max_results
+    seen_titles = set()
+    required_count = settings.max_results  # Now 10
     
-    # First pass: search with all queries
-    for query in queries:
-        if len(all_results) >= required_count:
-            break
-        results = client.search(query.query, required_count)
-        for r in results:
-            if r.url not in seen_urls:
-                seen_urls.add(r.url)
-                all_results.append(r)
-    
-    # If we don't have enough results, try additional queries based on location preference
-    if len(all_results) < required_count:
-        if profile.location_preference == "egypt":
-            fallback_queries = [
-                f"internship Cairo Egypt {profile.track}",
-                f"تدريب صيفي مصر برمجة",
-                f"junior developer Egypt Cairo",
-                f"software internship Egypt 2024 2025",
-                f"Vodafone Egypt internship",
-                f"Orange Egypt graduate program",
-                f"tech internship Egypt",
-            ]
-        elif profile.location_preference == "remote":
-            fallback_queries = [
-                f"remote internship {profile.track} worldwide",
-                f"work from home internship software",
-                f"remote junior developer position",
-                f"virtual internship tech",
-            ]
-        elif profile.location_preference == "abroad":
-            fallback_queries = [
-                f"internship {profile.track} USA visa sponsorship",
-                f"internship Europe software",
-                f"internship UAE Dubai tech",
-                f"international internship program",
-            ]
-        else:
-            fallback_queries = [
-                f"{profile.track} internship 2024",
-                f"software engineer intern",
-                f"data science internship",
-            ]
-        
-        for fallback_query in fallback_queries:
-            if len(all_results) >= required_count:
-                break
-            results = client.search(fallback_query, required_count - len(all_results))
+    # Use ONLY the first query (1 API credit)
+    if queries:
+        query = queries[0]
+        try:
+            logger.info(f"Searching LinkedIn: {query.query[:80]}...")
+            results = client.search(query.query, required_count, profile.location_preference)
+            
             for r in results:
-                if r.url not in seen_urls:
+                title_key = r.title.lower()[:50]
+                if r.url not in seen_urls and title_key not in seen_titles:
                     seen_urls.add(r.url)
+                    seen_titles.add(title_key)
                     all_results.append(r)
+                    
+        except Exception as e:
+            logger.warning(f"LinkedIn query failed: {e}")
     
-    # Ensure we return exactly the required count (or all if less available)
     final_results = all_results[:required_count]
     
-    logger.info("Retrieved opportunities", extra={"count": len(final_results), "required": required_count})
+    logger.info(f"Retrieved {len(final_results)} LinkedIn opportunities (1 API credit used)")
+    
     return {"raw_opportunities": final_results}
 
 
@@ -275,83 +289,204 @@ def clean_opportunities(state: MatchState, config: RunnableConfig) -> dict:
 
 
 def score_opportunities(state: MatchState, config: RunnableConfig) -> dict:
-    """Score each opportunity against the user profile."""
+    """Score opportunities with enhanced multi-criteria algorithm."""
     profile = state["profile"]
     opportunities = state["clean_opportunities"]
     
-    # Egyptian cities and indicators for location matching
-    egypt_indicators = {"egypt", "cairo", "alexandria", "giza", "maadi", "nasr city", "6th october", "new cairo", "مصر", "القاهرة"}
+    # Location indicators for matching
+    egypt_indicators = {
+        "egypt", "cairo", "alexandria", "giza", "maadi", "nasr city", "6th october", 
+        "new cairo", "smart village", "heliopolis", "dokki", "zamalek", "mohandessin",
+        "مصر", "القاهرة", "الإسكندرية", "الجيزة"
+    }
+    
+    international_indicators = {
+        "usa", "united states", "uk", "germany", "france", "canada", "australia",
+        "uae", "dubai", "saudi", "qatar", "kuwait", "netherlands", "sweden"
+    }
     
     scored = []
     for opp in opportunities:
-        text = f"{opp.title} {opp.description}".lower()
+        text = f"{opp.title} {opp.description} {opp.company}".lower()
         location_lower = opp.location.lower()
+        company_lower = opp.company.lower()
+        
         score = 0
         reasons = []
-        missing = []
         
-        # Track alignment (30 points)
-        track_words = profile.track.replace("_", " ").split()
-        if any(word in text for word in track_words) or profile.track in text:
+        # ============ TRACK ALIGNMENT (25 points) ============
+        track_key = profile.track.lower().strip()
+        track_titles = TRACK_TITLES.get(track_key, [profile.track])
+        
+        track_match = False
+        for title_variant in track_titles:
+            if title_variant.lower() in text:
+                track_match = True
+                break
+        
+        # Also check track keywords
+        track_words = track_key.replace("_", " ").replace("-", " ").split()
+        if track_match or any(word in text for word in track_words if len(word) > 2):
             score += RUBRIC["track_alignment"]
-            reasons.append("Role aligns with your track.")
+            reasons.append("✅ Role aligns with your track.")
+        elif "intern" in text and any(word in text for word in ["software", "developer", "engineer", "data", "analyst"]):
+            score += int(RUBRIC["track_alignment"] * 0.5)
+            reasons.append("Role is in a related tech field.")
         
-        # Skills match (35 points)
+        # ============ SKILLS MATCH (30 points) ============
         user_skills = set(profile.skills.hard + profile.skills.tools)
-        matched_skills = [skill for skill in user_skills if skill in text]
-        skill_score = int((len(matched_skills) / max(len(user_skills), 1)) * RUBRIC["skills_match"])
-        score += skill_score
-        if matched_skills:
-            reasons.append(f"Matched skills: {', '.join(sorted(matched_skills))}.")
+        matched_skills = []
         
-        # Academic fit (15 points)
+        for skill in user_skills:
+            # More flexible matching (handle variations)
+            skill_lower = skill.lower()
+            if skill_lower in text:
+                matched_skills.append(skill)
+            elif skill_lower == "python" and ("py" in text or "django" in text or "flask" in text):
+                matched_skills.append(skill)
+            elif skill_lower == "javascript" and ("js" in text or "react" in text or "node" in text or "typescript" in text):
+                matched_skills.append(skill)
+            elif skill_lower == "sql" and ("database" in text or "mysql" in text or "postgresql" in text):
+                matched_skills.append(skill)
+        
+        if user_skills:
+            skill_ratio = len(matched_skills) / len(user_skills)
+            skill_score = int(skill_ratio * RUBRIC["skills_match"])
+            score += skill_score
+            if matched_skills:
+                reasons.append(f"🛠️ Matched skills: {', '.join(sorted(matched_skills)[:5])}.")
+        else:
+            score += int(RUBRIC["skills_match"] * 0.3)  # Partial score if no skills specified
+        
+        # ============ ACADEMIC FIT (10 points) ============
         if profile.year_level in {"junior", "senior", "graduate"}:
             score += RUBRIC["academic_fit"]
-            reasons.append("Your academic level is a good fit.")
+            reasons.append("🎓 Your academic level is a great fit.")
+        elif profile.year_level == "sophomore":
+            score += int(RUBRIC["academic_fit"] * 0.7)
+            reasons.append("Your academic level is acceptable.")
         else:
-            score += int(RUBRIC["academic_fit"] * 0.6)
+            score += int(RUBRIC["academic_fit"] * 0.5)
         
-        # Location/Preference fit (10 points) - Enhanced for Egypt
-        location_matched = False
+        # ============ LOCATION/PREFERENCE FIT (15 points) ============
+        location_score = 0
+        
         if profile.location_preference == "egypt":
-            # Check if location contains any Egypt indicator
             if any(indicator in location_lower for indicator in egypt_indicators):
-                score += RUBRIC["preference_fit"]
-                reasons.append("📍 Location in Egypt as preferred!")
-                location_matched = True
-            elif "anywhere" in location_lower or "remote" in location_lower:
-                # Remote jobs are acceptable for Egypt preference too
-                score += int(RUBRIC["preference_fit"] * 0.5)
-                reasons.append("Remote position (can work from Egypt).")
-                location_matched = True
-            # Penalize jobs clearly in other countries
-            elif any(loc in location_lower for loc in ["usa", "united states", ", md", ", dc", ", ca", ", ny", ", tx"]):
-                score -= 10  # Penalty for clearly US-based jobs
+                location_score = RUBRIC["preference_fit"]
+                reasons.append("📍 Located in Egypt as preferred!")
+            elif "remote" in location_lower or opp.work_type == "Remote":
+                location_score = int(RUBRIC["preference_fit"] * 0.7)
+                reasons.append("🏠 Remote position (can work from Egypt).")
+            elif any(indicator in location_lower for indicator in international_indicators):
+                location_score = -5  # Penalty for international when Egypt preferred
                 reasons.append("⚠️ Location is outside Egypt.")
-        elif profile.location_preference in {"remote", "hybrid"} and opp.work_type in {"Remote", "Hybrid"}:
-            score += RUBRIC["preference_fit"]
-            reasons.append("Work type matches your preference.")
-            location_matched = True
-        elif profile.location_preference == "abroad" and not any(indicator in location_lower for indicator in egypt_indicators):
-            score += RUBRIC["preference_fit"]
-            reasons.append("International opportunity.")
-            location_matched = True
+            else:
+                location_score = int(RUBRIC["preference_fit"] * 0.3)
+                
+        elif profile.location_preference == "remote":
+            if opp.work_type == "Remote" or "remote" in location_lower:
+                location_score = RUBRIC["preference_fit"]
+                reasons.append("🏠 Remote position as preferred!")
+            elif opp.work_type == "Hybrid":
+                location_score = int(RUBRIC["preference_fit"] * 0.6)
+                reasons.append("Hybrid position available.")
+            else:
+                location_score = int(RUBRIC["preference_fit"] * 0.2)
+                
+        elif profile.location_preference == "abroad":
+            if any(indicator in location_lower for indicator in international_indicators):
+                location_score = RUBRIC["preference_fit"]
+                reasons.append("🌍 International opportunity!")
+            elif not any(indicator in location_lower for indicator in egypt_indicators):
+                location_score = int(RUBRIC["preference_fit"] * 0.5)
+                reasons.append("Potential international position.")
+            else:
+                location_score = 0
+                reasons.append("Located in Egypt (you prefer abroad).")
+        else:
+            # Hybrid preference
+            location_score = int(RUBRIC["preference_fit"] * 0.5)
         
-        # Readiness (10 points)
-        if "intern" in opp.title.lower():
+        score += location_score
+        
+        # ============ READINESS/LEVEL (10 points) ============
+        title_lower = opp.title.lower()
+        if "intern" in title_lower:
             score += RUBRIC["readiness"]
             reasons.append("Entry-level internship role.")
+        elif "junior" in title_lower or "entry" in title_lower or "graduate" in title_lower:
+            score += int(RUBRIC["readiness"] * 0.8)
+            reasons.append("Entry-level position.")
+        elif "senior" in title_lower or "lead" in title_lower or "manager" in title_lower:
+            score += 0  # Not suitable for interns
+            reasons.append("⚠️ May require more experience.")
         else:
             score += int(RUBRIC["readiness"] * 0.5)
         
-        # Ensure score is not negative
-        score = max(0, score)
+        # ============ PLATFORM QUALITY (5 points) ============
+        platform_score = PLATFORM_SCORES.get(opp.source, 2)
+        score += platform_score
+        if platform_score >= 4:
+            reasons.append(f"📱 Found on {opp.source}.")
         
-        # Missing skills
-        missing = [s for s in user_skills if s not in matched_skills][:3]
-        recommended = [f"Build a project using {s}." for s in missing] if missing else ["Keep developing your portfolio."]
+        # ============ COMPANY REPUTATION (5 points) ============
+        # Check if company is a known Egyptian tech company
+        company_boost = 0
+        for known_company in EGYPTIAN_COMPANIES:
+            if known_company.lower() in company_lower or company_lower in known_company.lower():
+                company_boost = RUBRIC["company_reputation"]
+                reasons.append(f"🏢 {opp.company} is a recognized tech company!")
+                break
         
-        scored.append(OpportunityScore(
+        # Also boost for well-known international companies
+        if company_boost == 0:
+            big_tech = ["google", "microsoft", "amazon", "meta", "apple", "netflix", "uber", "airbnb"]
+            if any(tech in company_lower for tech in big_tech):
+                company_boost = RUBRIC["company_reputation"]
+                reasons.append(f"🌟 {opp.company} is a top tech company!")
+        
+        score += company_boost
+        
+        # ============ ENSURE VALID SCORE ============
+        score = max(0, min(100, score))  # Clamp between 0-100
+        
+        scored.append({
+            "opp": opp,
+            "score": score,
+            "fallback_reasons": reasons,
+        })
+    
+    # ============ USE AI TO GENERATE PERSONALIZED REASONS ============
+    ai_client = get_openai_client()
+    user_skills = profile.skills.hard + profile.skills.tools
+    
+    final_scored = []
+    for item in scored:
+        opp = item["opp"]
+        score = item["score"]
+        
+        if ai_client:
+            try:
+                ai_reasons = ai_client.generate_match_reasons(
+                    job_title=opp.title,
+                    company=opp.company,
+                    job_description=opp.description or "",
+                    user_track=profile.track,
+                    user_skills=user_skills,
+                    user_year=profile.year_level,
+                    location_preference=profile.location_preference,
+                    job_location=opp.location,
+                    score=score,
+                )
+                reasons = ai_reasons
+            except Exception as e:
+                logger.warning(f"AI reasons failed: {e}")
+                reasons = item["fallback_reasons"]
+        else:
+            reasons = item["fallback_reasons"]
+        
+        final_scored.append(OpportunityScore(
             title=opp.title,
             company=opp.company,
             location=opp.location,
@@ -359,13 +494,11 @@ def score_opportunities(state: MatchState, config: RunnableConfig) -> dict:
             source=opp.source,
             work_type=opp.work_type,
             score=score,
-            reasons=reasons if reasons else ["General internship opportunity."],
-            missing_skills=missing,
-            recommended_actions=recommended,
+            reasons=reasons,
         ))
     
-    logger.info("Scored opportunities", extra={"count": len(scored)})
-    return {"scored_opportunities": scored}
+    logger.info("Scored opportunities with AI reasons", extra={"count": len(final_scored)})
+    return {"scored_opportunities": final_scored}
 
 
 def rank_opportunities(state: MatchState, config: RunnableConfig) -> dict:
@@ -395,36 +528,6 @@ def rank_opportunities(state: MatchState, config: RunnableConfig) -> dict:
     return {"ranked_opportunities": top}
 
 
-def build_coach_plan(state: MatchState, config: RunnableConfig) -> dict:
-    """Generate a coaching plan based on matched opportunities."""
-    profile = state["profile"]
-    opportunities = state["ranked_opportunities"]
-    
-    # Collect missing skills
-    missing = []
-    for opp in opportunities:
-        missing.extend(opp.missing_skills)
-    unique_missing = list(dict.fromkeys(missing))[:5]
-    
-    two_weeks = [
-        "Review top matched internships and tailor your resume.",
-        "Update your LinkedIn profile with relevant skills.",
-    ]
-    
-    one_month = [f"Complete a project using {skill}." for skill in unique_missing] if unique_missing else [
-        "Build a portfolio project aligned with your track."
-    ]
-    
-    coach_plan = {
-        "next_2_weeks": two_weeks,
-        "next_1_month": one_month,
-        "notes": [f"Focus track: {profile.track.title()}"]
-    }
-    
-    logger.info("Coach plan generated")
-    return {"coach_plan": coach_plan}
-
-
 def build_result(state: MatchState, config: RunnableConfig) -> dict:
     """Build the final result object."""
     result = MatchResultRun(
@@ -434,7 +537,6 @@ def build_result(state: MatchState, config: RunnableConfig) -> dict:
         generated_queries=state["queries"],
         opportunities_top20=state["clean_opportunities"],
         ranked_top5=state["ranked_opportunities"],
-        coach_plan=state["coach_plan"],
     )
     
     logger.info("Result built", extra={"run_id": str(result.run_id)})

@@ -20,7 +20,6 @@ class InterviewSessionStore:
             cls._instance._sessions = {}
             cls._instance._reports = {}
         return cls._instance
-        return cls._instance
     
     def create_session(
         self,

@@ -1,4 +1,3 @@
-"""Interview and Career agents module."""
 from app.agents.base_agent import BaseInterviewAgent
 from app.agents.interviewer import InterviewerAgent
 from app.agents.answer_analyzer import AnswerAnalyzerAgent
@@ -10,9 +9,7 @@ from app.agents.session_manager import SessionManagerAgent
 from app.agents.career_translator import CareerTranslatorAgent, get_career_translator
 
 __all__ = [
-    # Base
     "BaseInterviewAgent",
-    # Interview agents
     "InterviewerAgent",
     "AnswerAnalyzerAgent",
     "CommunicationCoachAgent",
@@ -20,7 +17,6 @@ __all__ = [
     "MemoryAgent",
     "ReportGeneratorAgent",
     "SessionManagerAgent",
-    # Career agents
     "CareerTranslatorAgent",
     "get_career_translator",
 ]
