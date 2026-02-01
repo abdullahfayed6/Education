@@ -13,6 +13,7 @@ from app.api.recap import router as recap_router
 from app.api.recommender import router as recommender_router
 from app.api.cv import router as cv_router
 from app.api.advisor import router as advisor_router
+from app.api.work import router as work_router
 
 logging.basicConfig(level=logging.INFO)
 
@@ -51,15 +52,23 @@ AI-powered CV generation system that:
 - Allows students to add their own skills
 - Generates professional, ATS-friendly CVs
 
-### 7. Advisor Agent (NEW) - Student Life & Tech Mentor
+### 7. Advisor Agent - Student Life & Tech Mentor
 Personal AI mentor that analyzes student state and provides advice on:
 - 📘 Learning & Study strategies
 - 💻 Technical Career Growth
 - ⏳ Productivity & Habits
 - 🧠 Mindset & Motivation
 - 🌿 Life Balance (health, stress, focus)
+
+### 8. Work Recommendation Agent (NEW)
+AI-powered job and freelance recommendation system that:
+- 💼 Job Recommendations (3-5 suitable jobs/internships)
+- 💻 Freelance Opportunities (gigs you can start NOW)
+- 🚀 Income Strategy (fast income vs long-term career)
+- 📈 Skill Gap Analysis (what to learn next)
+- 🎯 High-Impact Project Suggestion
     """,
-    version="1.3.0",
+    version="1.4.0",
 )
 
 # Add CORS middleware
@@ -80,6 +89,7 @@ app.include_router(recap_router)
 app.include_router(recommender_router)
 app.include_router(cv_router)
 app.include_router(advisor_router)
+app.include_router(work_router)
 
 
 @app.get("/")
@@ -87,7 +97,7 @@ async def root():
     """Root endpoint with API information."""
     return {
         "message": "Education Platform - Multi-Agent System",
-        "version": "1.3.0",
+        "version": "1.4.0",
         "services": {
             "career_translator": {
                 "description": "Convert lectures to industry value",
@@ -141,6 +151,18 @@ async def root():
                     "learning_advice": "/api/advisor/learning",
                     "productivity_advice": "/api/advisor/productivity",
                     "mindset_advice": "/api/advisor/mindset"
+                }
+            },
+            "work_recommendations": {
+                "description": "AI-powered job and freelance recommendations",
+                "endpoints": {
+                    "full_recommendations": "/api/work/recommendations",
+                    "jobs_only": "/api/work/jobs",
+                    "freelance_only": "/api/work/freelance",
+                    "readiness_check": "/api/work/readiness",
+                    "platforms": "/api/work/platforms",
+                    "job_types": "/api/work/job-types",
+                    "freelance_gigs": "/api/work/freelance-gigs"
                 }
             }
         },
