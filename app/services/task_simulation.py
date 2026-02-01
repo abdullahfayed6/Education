@@ -1,6 +1,20 @@
 from __future__ import annotations
 
 import hashlib
+from typing import Any
+
+from app.models.schemas import (
+    CompanyProfile,
+    TaskContext,
+    TaskOrigin,
+    RoleInfo,
+    TechnicalDetails,
+    NonTechnicalRealities,
+    MindsetComparison,
+    SkillsTraining,
+    FinalChallenge,
+    TaskSimulationStructured,
+)
 
 
 # Egyptian Tech Companies Database
@@ -133,7 +147,7 @@ def get_available_companies() -> list[dict[str, str]]:
     ]
 
 
-def generate_task_simulation(company_name: str, task_title: str) -> str:
+def generate_task_simulation(company_name: str, task_title: str) -> TaskSimulationStructured:
     # Get company-specific context
     company_info = _get_company_context(company_name)
     
@@ -214,226 +228,191 @@ def generate_task_simulation(company_name: str, task_title: str) -> str:
     data_issues = _pick(data_issues_options, f"data:{company_name}:{task_title}")
     egypt_challenge = _pick(egypt_specific_challenges, f"egypt:{company_name}:{task_title}")
 
-    return f"""
-==========================================
-TASK SIMULATION: {task_title} @ {company_name}
-==========================================
-
-COMPANY PROFILE
-- Name: {company_name}
-- Type: {company_info['type']}
-- Size: {company_info['size']}
-- Focus Areas: {company_info['focus']}
-- Tech Stack: {company_info['tech_stack']}
-- Key Challenges: {company_info['challenges']}
-
-1. COMPANY CONTEXT (REALISTIC BUSINESS SETUP)
-- Company overview:
-  {overview}
-- Users:
-  {users}
-- Business problem:
-  {problem}
-- Why this matters:
-  The issue is impacting customer satisfaction, revenue growth, and competitive positioning in the Egyptian market. Urgent action needed to maintain market leadership.
-
-2. TASK ORIGIN (HOW THIS ARRIVED AT YOUR DESK)
-- Requested by:
-  Engineering Manager in collaboration with Product and Operations teams.
-- Trigger event:
-  {trigger}
-- Requirement quality:
-  High-level requirements defined. Technical implementation details need to be proposed by engineering team. Stakeholders expect progress updates.
-- Constraints:
-  {constraints}
-- Egypt-specific consideration:
-  {egypt_challenge}
-
-3. YOUR ROLE IN THE COMPANY
-- Job title:
-  {role_title}
-- What YOU are responsible for:
-  Building the MVP implementation, documenting assumptions, and proposing a safe rollout plan.
-- What you are NOT responsible for:
-  {out_of_scope}
-- Who you work with:
-  PMs, a senior engineer for review, an ops stakeholder, and a QA partner who is only available part-time.
-
-4. ACTUAL TECHNICAL TASK (REAL WORK VERSION)
-Describe what needs to be built or improved:
-- High-level system workflow
-  - Design and implement solution for: {task_title}
-  - Follow company standards for {company_info['tech_stack']}
-  - Integrate with existing systems and APIs
-- Data inputs and sources (including data quality issues)
-  - {data_issues}
-  - Must handle Egyptian market data patterns and Arabic content where applicable
-- Expected outputs
-  - Working MVP demonstrating core functionality
-  - Technical documentation and deployment guide
-  - Test coverage for critical paths
-  - Performance benchmarks meeting SLA requirements
-- Edge cases and failure scenarios
-  - System degradation during peak hours (7-11 PM Cairo time)
-  - Partial data availability or third-party API failures
-  - Arabic/English bilingual content handling
-  - Network connectivity issues common in Egyptian infrastructure
-- Performance or scale considerations
-  - Must handle typical Egyptian user traffic patterns
-  - Response time < 2 seconds for 95th percentile
-  - Support concurrent users scaling to regional demand
-- Integrations with existing systems or APIs
-  - {company_info['tech_stack']} ecosystem
-  - Third-party services common in Egyptian market (payment gateways, SMS providers, etc.)
-- Security, reliability, and logging concerns
-  - Comply with Egyptian data protection regulations
-  - Implement proper authentication and authorization
-  - Comprehensive logging for debugging and monitoring
-  - Error handling with user-friendly Arabic/English messages
-- Deployment expectations (CI/CD, monitoring, rollback)
-  - Deploy to staging environment first
-  - Feature flags for gradual rollout
-  - Monitoring and alerting setup
-  - Rollback plan in case of issues
-
-5. NON-TECHNICAL REALITIES (THIS IS REAL LIFE IN EGYPTIAN TECH COMPANIES)
-Explicitly describe:
-- Ambiguities in the task
-  - Requirements may evolve based on stakeholder feedback and market conditions in Egypt
-  - Success criteria need to be clarified with product and business teams
-  - Scope boundaries with other teams' responsibilities unclear initially
-- Trade-offs that must be made
-  - Speed to market vs. perfect technical solution
-  - MVP feature set vs. comprehensive functionality
-  - Custom development vs. leveraging existing libraries/services
-  - Development time vs. testing coverage
-- Decisions required with incomplete information
-  - Technology choices when requirements are still being finalized
-  - Database schema design with partial data samples
-  - API design before all use cases are known
-  - Scaling strategy with estimated traffic projections
-- Communication challenges
-  - Daily standups with distributed team members
-  - Technical explanations to non-technical stakeholders
-  - Coordinating with multiple teams (backend, frontend, QA, DevOps)
-  - Managing expectations on timeline and deliverables
-- Business pressure vs technical correctness
-  - Leadership wants demo for potential clients next sprint
-  - Marketing team needs features for upcoming campaign
-  - Competition launching similar features in Egyptian market
-  - Balancing technical debt with rapid delivery
-
-6. HOW A STUDENT TYPICALLY THINKS (ACADEMIC MODE)
-Describe how a student might incorrectly approach this:
-- Focus on algorithms only
-- Ignore data issues
-- Assume perfect requirements
-- Over-engineer or under-scope
-
-7. HOW A REAL ENGINEER APPROACHES IT
-Describe a professional mindset:
-- Breaks the problem into deliverable phases
-- Reduces risk early
-- Communicates assumptions clearly
-- Chooses pragmatic solutions
-- Plans for iteration, not perfection
-
-8. SKILLS THIS TASK IS DESIGNED TO TRAIN
-Explicitly list:
-- Technical skills
-  - Proficiency in {company_info['tech_stack']}
-  - API design and RESTful principles
-  - Database design and optimization
-  - Testing strategies (unit, integration, E2E)
-  - Version control and collaborative development
-  - Cloud deployment and DevOps practices
-- System design thinking
-  - Breaking complex problems into manageable components
-  - Designing scalable and maintainable architectures
-  - Handling edge cases and failure scenarios
-  - Performance optimization and monitoring
-  - Security considerations and data protection
-- Decision-making under constraints
-  - Prioritizing features for MVP scope
-  - Time-boxed delivery within sprint deadlines
-  - Quality vs. speed trade-offs
-  - Resource allocation and technical debt management
-- Communication and collaboration
-  - Writing clear technical documentation
-  - Explaining technical concepts to non-technical stakeholders
-  - Code reviews and giving/receiving feedback
-  - Cross-team coordination and dependency management
-- Handling unclear or changing requirements
-  - Iterative development and continuous refinement
-  - Stakeholder alignment and expectation management
-  - Adapting to market feedback and business needs
-  - Documenting assumptions and clarifying ambiguities
-- Egyptian market context
-  - Understanding local user behavior and preferences
-  - Mobile-first development for Egyptian market
-  - Bilingual (Arabic/English) support considerations
-  - Local payment and service integrations
-  - Infrastructure constraints and optimization
-
-9. FINAL CHALLENGE TO THE INTERN
-"You have 2 weeks (10 working days) to deliver an MVP for this task.
-Your deliverables:
-1. Working implementation demonstrating core functionality
-2. Technical design document explaining your approach
-3. Test suite covering critical scenarios
-4. Deployment guide and documentation
-5. 15-minute presentation to stakeholders
-
-Prepare to answer:
-- Why did you choose this technical approach?
-- What are the key risks and how did you mitigate them?
-- How does your solution handle Egyptian market requirements?
-- What would you do differently with more time?
-- How will you measure success?
-
-Success criteria:
-- MVP meets core functional requirements
-- Code is clean, documented, and maintainable
-- Solution demonstrates understanding of real-world constraints
-- Clear communication of technical decisions and trade-offs"
-
-==========================================
-GOAL OF THIS TASK SIMULATOR
-==========================================
-- Simulate realistic work at {company_name} in Egypt
-- Bridge gap between academic learning and Egyptian tech industry
-- Train engineers to think, communicate, and decide like professionals
-- Show that real work is messy, constrained, and collaborative
-- Prepare students for internships at Egyptian tech companies
-- Emphasize practical problem-solving over theoretical perfection
-==========================================
-
---------------------------------------------------
-IMPORTANT MVP & REALISTIC DATA NOTE
---------------------------------------------------
-This task is designed for internship-level work at {company_name}.
-
-You MUST:
-- Focus on MVP scope suitable for 2-week sprint
-- Use realistic data patterns from Egyptian market
-- Consider Arabic language and RTL support where relevant
-- Account for mobile-first user base in Egypt
-- Integrate with common Egyptian services (payment, SMS, etc.)
-- Handle infrastructure constraints (varying internet speeds)
-- Document all assumptions clearly
-- Prioritize working software over perfect architecture
-
-The focus is on:
-- Practical implementation skills
-- Problem-solving under real constraints
-- Clear technical communication
-- Understanding business context
-- Professional work habits
-
-NOT on:
-- Perfect production-ready code
-- Advanced optimization
-- Comprehensive feature set
-- Complex architectural patterns
-==========================================
-""".strip()
+    return TaskSimulationStructured(
+        company=CompanyProfile(
+            name=company_name,
+            type=company_info["type"],
+            size=company_info["size"],
+            focus_areas=company_info["focus"],
+            tech_stack=company_info["tech_stack"],
+            key_challenges=company_info["challenges"],
+        ),
+        context=TaskContext(
+            company_overview=overview,
+            target_users=users,
+            business_problem=problem,
+            why_it_matters="The issue is impacting customer satisfaction, revenue growth, and competitive positioning in the Egyptian market. Urgent action needed to maintain market leadership.",
+        ),
+        origin=TaskOrigin(
+            requested_by="Engineering Manager in collaboration with Product and Operations teams",
+            trigger_event=trigger,
+            requirement_quality="High-level requirements defined. Technical implementation details need to be proposed by engineering team. Stakeholders expect progress updates.",
+            constraints=constraints,
+            egypt_consideration=egypt_challenge,
+        ),
+        role=RoleInfo(
+            job_title=role_title,
+            responsibilities="Building the MVP implementation, documenting assumptions, and proposing a safe rollout plan.",
+            out_of_scope=out_of_scope,
+            collaborators="PMs, a senior engineer for review, an ops stakeholder, and a QA partner who is only available part-time.",
+        ),
+        technical=TechnicalDetails(
+            task_description=f"Design and implement solution for: {task_title}. Follow company standards for {company_info['tech_stack']}. Integrate with existing systems and APIs.",
+            data_inputs=f"{data_issues} Must handle Egyptian market data patterns and Arabic content where applicable.",
+            expected_outputs=[
+                "Working MVP demonstrating core functionality",
+                "Technical documentation and deployment guide",
+                "Test coverage for critical paths",
+                "Performance benchmarks meeting SLA requirements",
+            ],
+            edge_cases=[
+                "System degradation during peak hours (7-11 PM Cairo time)",
+                "Partial data availability or third-party API failures",
+                "Arabic/English bilingual content handling",
+                "Network connectivity issues common in Egyptian infrastructure",
+            ],
+            performance_requirements=[
+                "Must handle typical Egyptian user traffic patterns",
+                "Response time < 2 seconds for 95th percentile",
+                "Support concurrent users scaling to regional demand",
+            ],
+            integrations=f"{company_info['tech_stack']} ecosystem. Third-party services common in Egyptian market (payment gateways, SMS providers, etc.)",
+            security_requirements=[
+                "Comply with Egyptian data protection regulations",
+                "Implement proper authentication and authorization",
+                "Comprehensive logging for debugging and monitoring",
+                "Error handling with user-friendly Arabic/English messages",
+            ],
+            deployment_expectations=[
+                "Deploy to staging environment first",
+                "Feature flags for gradual rollout",
+                "Monitoring and alerting setup",
+                "Rollback plan in case of issues",
+            ],
+        ),
+        realities=NonTechnicalRealities(
+            ambiguities=[
+                "Requirements may evolve based on stakeholder feedback and market conditions in Egypt",
+                "Success criteria need to be clarified with product and business teams",
+                "Scope boundaries with other teams' responsibilities unclear initially",
+            ],
+            tradeoffs=[
+                "Speed to market vs. perfect technical solution",
+                "MVP feature set vs. comprehensive functionality",
+                "Custom development vs. leveraging existing libraries/services",
+                "Development time vs. testing coverage",
+            ],
+            decisions_with_incomplete_info=[
+                "Technology choices when requirements are still being finalized",
+                "Database schema design with partial data samples",
+                "API design before all use cases are known",
+                "Scaling strategy with estimated traffic projections",
+            ],
+            communication_challenges=[
+                "Daily standups with distributed team members",
+                "Technical explanations to non-technical stakeholders",
+                "Coordinating with multiple teams (backend, frontend, QA, DevOps)",
+                "Managing expectations on timeline and deliverables",
+            ],
+            business_pressure=[
+                "Leadership wants demo for potential clients next sprint",
+                "Marketing team needs features for upcoming campaign",
+                "Competition launching similar features in Egyptian market",
+                "Balancing technical debt with rapid delivery",
+            ],
+        ),
+        mindset=MindsetComparison(
+            student_approach=[
+                "Focus on algorithms only",
+                "Ignore data issues",
+                "Assume perfect requirements",
+                "Over-engineer or under-scope",
+            ],
+            professional_approach=[
+                "Breaks the problem into deliverable phases",
+                "Reduces risk early",
+                "Communicates assumptions clearly",
+                "Chooses pragmatic solutions",
+                "Plans for iteration, not perfection",
+            ],
+        ),
+        skills=SkillsTraining(
+            technical_skills=[
+                f"Proficiency in {company_info['tech_stack']}",
+                "API design and RESTful principles",
+                "Database design and optimization",
+                "Testing strategies (unit, integration, E2E)",
+                "Version control and collaborative development",
+                "Cloud deployment and DevOps practices",
+            ],
+            system_design=[
+                "Breaking complex problems into manageable components",
+                "Designing scalable and maintainable architectures",
+                "Handling edge cases and failure scenarios",
+                "Performance optimization and monitoring",
+                "Security considerations and data protection",
+            ],
+            decision_making=[
+                "Prioritizing features for MVP scope",
+                "Time-boxed delivery within sprint deadlines",
+                "Quality vs. speed trade-offs",
+                "Resource allocation and technical debt management",
+            ],
+            communication=[
+                "Writing clear technical documentation",
+                "Explaining technical concepts to non-technical stakeholders",
+                "Code reviews and giving/receiving feedback",
+                "Cross-team coordination and dependency management",
+            ],
+            handling_ambiguity=[
+                "Iterative development and continuous refinement",
+                "Stakeholder alignment and expectation management",
+                "Adapting to market feedback and business needs",
+                "Documenting assumptions and clarifying ambiguities",
+            ],
+            egypt_market=[
+                "Understanding local user behavior and preferences",
+                "Mobile-first development for Egyptian market",
+                "Bilingual (Arabic/English) support considerations",
+                "Local payment and service integrations",
+                "Infrastructure constraints and optimization",
+            ],
+        ),
+        challenge=FinalChallenge(
+            timeline="2 weeks (10 working days) to deliver an MVP",
+            deliverables=[
+                "Working implementation demonstrating core functionality",
+                "Technical design document explaining your approach",
+                "Test suite covering critical scenarios",
+                "Deployment guide and documentation",
+                "15-minute presentation to stakeholders",
+            ],
+            key_questions=[
+                "Why did you choose this technical approach?",
+                "What are the key risks and how did you mitigate them?",
+                "How does your solution handle Egyptian market requirements?",
+                "What would you do differently with more time?",
+                "How will you measure success?",
+            ],
+            success_criteria=[
+                "MVP meets core functional requirements",
+                "Code is clean, documented, and maintainable",
+                "Solution demonstrates understanding of real-world constraints",
+                "Clear communication of technical decisions and trade-offs",
+            ],
+        ),
+        mvp_focus=[
+            "Practical implementation skills",
+            "Problem-solving under real constraints",
+            "Clear technical communication",
+            "Understanding business context",
+            "Professional work habits",
+        ],
+        not_focus=[
+            "Perfect production-ready code",
+            "Advanced optimization",
+            "Comprehensive feature set",
+            "Complex architectural patterns",
+        ],
+        goal=f"Simulate realistic work at {company_name} in Egypt. Bridge gap between academic learning and Egyptian tech industry. Train engineers to think, communicate, and decide like professionals.",
+    )
